@@ -40,3 +40,15 @@ Often good to seperate header files from cpp files in different directories for 
         - Compilter or flags changed
 
 
+### Board
+Utilize a bit board 
+    - Chess board contains 64 squares
+    - Long contains 64 bits (64 bit architecture)
+    - Each bit answers a yes/no question regarding the board
+Multiple bit boards sum up to represent an entire chess board:
+    - white_pawn_bitboard => which squares consist of a white pawn 
+    - white_pieces => which squares consist of white white_pieces
+We can use these boards and perform bitwise operations to determine the 
+status of the next board
+
+For now one bit board for each piece will suffice + helper bitboards

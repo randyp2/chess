@@ -12,6 +12,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_executable(chess
     src/main.cpp
     src/ui/board_view.cpp
+    src/core/Position.cpp
 )
 
 # Allow #include "chess/..." from include/ directory
