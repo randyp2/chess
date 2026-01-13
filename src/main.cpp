@@ -18,38 +18,41 @@ int main() {
     // SFML uses sf namespace
     // Window: SFML Class that renders what you "draw" into it
     // Video Mode: Class explaining dimensions of window
-    // sf::RenderWindow window(sf::VideoMode(windowWidth, windowHeight),
-    // "Chess");
+    sf::RenderWindow window(sf::VideoMode(windowWidth, windowHeight), "Chess");
 
     // Synchronize drawing with refresh rate
-    // window.setVerticalSyncEnabled(true);
+    window.setVerticalSyncEnabled(true);
 
-    // ------ Init board ------
+    // ------ Init board & Position ------
     constexpr float squareSize = 80.0f;
-    // chess::ui::BoardView boardView({80.0f, 80.0f}, // top-left corner of
-    // board squareSize);
+    chess::ui::BoardView boardView({80.0f, 80.0f}, // top-left corner of board
+                                   squareSize);
+    chess::core::Position position;
+    position.print_bitboard(position.getPieces(chess::core::PieceType::Pawn));
 
     // ------ Main Event Loop ------
-    // while (window.isOpen()) {
-    //
-    //     sf::Event event{};
-    //
-    //     // Insert pending events and store in event
-    //     while (window.pollEvent(event)) {
-    //         if (event.type == sf::Event::Closed)
-    //             window.close();
-    //     }
-    //
-    //     // Erase frame and replace it with the following color
-    //     window.clear(sf::Color(30, 30, 30));
-    //     boardView.draw(window);
-    //     window.display();
-    // }
+    // int counter = 0;
+    while (window.isOpen() /*&& counter != 1*/) {
+
+        // counter++;
+        sf::Event event{};
+
+        // Insert pending events and store in event
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::Closed)
+                window.close();
+        }
+
+        // Erase frame and replace it with the following color
+        window.clear(sf::Color(30, 30, 30));
+        boardView.draw(window, position);
+        window.display();
+    }
 
     // Testing positions
-    chess::core::Position position;
-
-    position.print_bitboard(position.pieces(chess::core::PieceType::Knight));
+    // chess::core::Position position;
+    //
+    // position.print_bitboard(position.pieces(chess::core::PieceType::Knight));
     // position.print_bitboard(position.pieces(chess::core::Color::White,
     //                                         chess::core::PieceType::Knight));
     //

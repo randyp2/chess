@@ -1,9 +1,10 @@
-#include "../../include/chess/core/Position.hpp" #include < cctype>
+#include "../../include/chess/core/Position.hpp"
 #include <cstdint>
 #include <cwctype>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+
 namespace chess::core {
 
 /* ======================= ANONYMOUS NAMESPACE ======================= */
@@ -25,25 +26,60 @@ constexpr int square_index(int rank, int file) { return rank * 8 + (7 - file); }
 /* ========= CONSTRUCTORS =========*/
 Position::Position() {
     parse_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w");
+    // parse_fen("pppppppp/pppppppp/8/8/8/8/8/8 w");
 }
 
 Position::Position(const std::string &fen_string) { parse_fen(fen_string); }
 
 /* ========= GETTERS =========*/
-std::uint64_t Position::pieces(Color color, PieceType piece) const {
+std::uint64_t Position::getPieces(Color color, PieceType piece) const {
     return bit_boards[idx(color)][idx(piece)];
 }
 
-std::uint64_t Position::pieces(PieceType piece) const {
+std::uint64_t Position::getPieces(PieceType piece) const {
     return bit_boards[idx(Color::White)][idx(piece)] |
            bit_boards[idx(Color::Black)][idx(piece)];
 }
 
-std::uint64_t Position::occupied(Color color) const { return 0ULL; }
+std::uint64_t Position::getOccupied(Color color) const { return 0ULL; }
 
-std::uint64_t Position::occupied() const { return 0ULL; }
+std::uint64_t Position::getOccupied() const { return 0ULL; }
 
-/* -------------- Helper Functions -------------- */
+std::vector<PieceOnSquare> Position::getAllPieces() const {
+    std::vector<PieceOnSquare> returner;
+
+    for (int color = 0; color < 2; ++color) {
+        for (int piece = 0; piece < 6; ++piece) {
+            std::uint64_t bit_board = bit_boards[color][piece];
+
+            while (bit_board) {
+                // Count the number of trailing zeroes to the right of the first
+                // one
+                int square = __builtin_ctzll(bit_board);
+
+                /*
+                 * Bit _board - 1
+                 *      - flips lowest right 1 bit
+                 *      - sets the bits to the right of it to 1
+                 * &= removes the lowest set bit
+                 *
+                 * i.e.
+                 * bb = 00101000
+                 * bb - 1 = 001001111
+                 * bb & bb - 1 = 00100000
+                 */
+                bit_board &= bit_board - 1;
+
+                returner.push_back({static_cast<Color>(color),
+                                    static_cast<PieceType>(piece), square});
+            }
+        }
+    }
+
+    return returner;
+}
+
+/* ========= HELPERS FOR FEN ========= */
 void Position::clear() {
     for (auto &color_bit_board : bit_boards) {
         for (auto &bit_board : color_bit_board) {

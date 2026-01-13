@@ -10,6 +10,7 @@
  */
 #include <array>
 #include <string>
+#include <vector>
 
 /**
  * Holds a snapshot of current Position
@@ -28,13 +29,19 @@ enum class Color : std::uint8_t {
 };
 
 enum class PieceType : std::uint8_t {
-    Pawn = 0,
-    Knight = 1,
+    King = 0,
+    Queen = 1,
     Bishop = 2,
-    Rook = 3,
-    Queen = 4,
-    King = 5,
+    Knight = 3,
+    Rook = 4,
+    Pawn = 5,
     Count // Keep track of count in enum
+};
+
+struct PieceOnSquare {
+    Color color;
+    PieceType piece;
+    int squareIdx; // 0 - 63
 };
 
 class Position {
@@ -51,17 +58,25 @@ class Position {
      */
     Position(const std::string &);
 
-    // --- Bitboard getters
+    /* =============== BITBOARD GETTERS =============== */
 
     // Return bitboard with specific color and piece
-    std::uint64_t pieces(Color color, PieceType piece) const;
-    std::uint64_t pieces(PieceType color) const;
+    std::uint64_t getPieces(Color color, PieceType piece) const;
+    std::uint64_t getPieces(PieceType color) const;
 
     // Return occupied bitboard with specific color
-    std::uint64_t occupied(Color color) const;
+    std::uint64_t getOccupied(Color color) const;
 
     // Return occupied bitboard squares
-    std::uint64_t occupied() const;
+    std::uint64_t getOccupied() const;
+
+    /* =============== UI GETTERS =============== */
+    /**
+     * Return info about all possible pieces - 32 pieces
+     *
+     * @returns - vector of PieceOnSquare struct for each piece
+     */
+    std::vector<PieceOnSquare> getAllPieces() const;
 
     // --- Debugging
     void print_bitboard(std::uint64_t bb);

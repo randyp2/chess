@@ -1,7 +1,10 @@
 #pragma once // Define header once
 
+#include "../core/Position.hpp"
+
 // namespace is good practice here to show ownership
 #include <SFML/Graphics/Font.hpp>
+#include <SFML/Graphics/Rect.hpp>
 #include <SFML/Graphics/RenderTarget.hpp>
 #include <SFML/Graphics/Text.hpp>
 #include <SFML/Graphics/Texture.hpp>
@@ -20,14 +23,25 @@ class BoardView {
     BoardView(sf::Vector2f topLeft, float squareSizePx);
 
     // Draw to board with any valid randerTarget
-    void draw(sf::RenderTarget &target) const;
+    void draw(sf::RenderTarget &target,
+              const chess::core::Position &position) const;
+
+    int pixelToSquare(sf::Vector2f mouse) const;
 
   private:
-    // -- Helpers to draw board
+    /* =============== HELPERS =============== */
+    // -- UI helpers
     void drawRankNotation(sf::RenderTarget &target, sf::Text text, int rank,
                           int file) const;
     void drawFileNotation(sf::RenderTarget &target, sf::Text text, int rank,
                           int file) const;
+
+    // Convert square index to {x_pixel, y_pixel}
+    sf::Vector2f squareToPixel(int square) const;
+
+    // Convert piece to textured rect to draw
+    sf::IntRect pieceToTextureRect(chess::core::Color color,
+                                   chess::core::PieceType piece) const;
 
     sf::Vector2f topLeft;
     float squareSizePx;
