@@ -2,12 +2,13 @@
 #include <SFML/System/Vector2.hpp>
 #include <SFML/Window/Event.hpp>
 
+#include <iostream>
 namespace chess::ui {
 
 /* ========= METHOD IMPLEMENTATIONS =========*/
 void InputController::handleEvent(const sf::Event &event,
                                   const sf::RenderWindow &window,
-                                  const chess::ui::BoardView board,
+                                  const chess::ui::BoardView &board,
                                   chess::core::Position &position) {
     // --- Mouse press = Pick up piece
     if (event.type == sf::Event::MouseButtonPressed &&
@@ -20,6 +21,8 @@ void InputController::handleEvent(const sf::Event &event,
         int squareIdx = board.pixelToSquare(mouse);
         if (squareIdx == -1)
             return;
+
+        std::cout << "Picked up on squareIdx: " << squareIdx << std::endl;
 
         for (const auto &p : position.getAllPieces()) {
             // Check for matching squares
@@ -44,10 +47,13 @@ void InputController::handleEvent(const sf::Event &event,
     else if (event.type == sf::Event::MouseButtonReleased &&
              event.mouseButton.button == sf::Mouse::Left && drag.active) {
         int targetSquare = board.pixelToSquare(drag.mousePos);
+        std::cout << "Targetsquare: " << targetSquare << std::endl;
 
         if (targetSquare != -1) {
-            // Impelment Position::makeMove();
+            position.makeMove(drag.piece.squareIdx, targetSquare);
         }
+
+        drag.active = false;
     }
 }
 }; // namespace chess::ui

@@ -174,6 +174,58 @@ void Position::parse_fen(const std::string &fen) {
     }
 }
 
+bool Position::findPieceAt(int squareIdx, Color &outColor,
+                           PieceType &outPiece) const {
+    std::uint64_t mask = 1ULL << squareIdx;
+
+    for (int color = 0; color < 2; ++color) {
+        for (int piece = 0; piece < 6; ++piece) {
+            if (bit_boards[color][piece] & mask) {
+                outColor = static_cast<Color>(color);
+                outPiece = static_cast<PieceType>(piece);
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+void Position::makeMove(int current_square, int final_square) {
+
+    // Same square move
+    if (current_square == final_square)
+        return;
+
+    Color currColor;
+    PieceType currPiece;
+
+    if (!findPieceAt(current_square, currColor, currPiece))
+        return;
+
+    // Represent from and to destinations with a bit board
+    std::uint64_t fromBB = 1ULL << current_square;
+    std::uint64_t toBB = 1ULL << final_square;
+
+    // Remove moving piece from own square
+    //  - Take ones complement and & it to the bit_boards
+    //  - This will remove the piece from its current position
+    //  i.e. bitboard = 00101000 , fromBB = 00101000, ~fromBB = 11010111
+    //  bitboard & ~fromBB = 0010000
+    bit_boards[idx(currColor)][idx(currPiece)] &= ~fromBB;
+
+    // Clear final square
+    for (int piece = 0; piece < 6; ++piece) {
+        bit_boards[idx(Color::White)][piece] &= ~toBB;
+        bit_boards[idx(Color::Black)][piece] &= ~toBB;
+    }
+
+    // Placing moving piece to final square
+    bit_boards[idx(currColor)][idx(currPiece)] |= toBB;
+
+    side_to_move = (side_to_move == Color::White) ? Color::Black : Color::White;
+}
+
 void Position::print_bitboard(std::uint64_t bb) {
 
     for (int rank = 7; rank >= 0; --rank) {

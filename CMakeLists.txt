@@ -13,6 +13,7 @@ add_executable(chess
     src/main.cpp
     src/ui/board_view.cpp
     src/core/Position.cpp
+    src/ui/input_controller.cpp
 )
 
 # Allow #include "chess/..." from include/ directory

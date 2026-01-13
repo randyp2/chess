@@ -1,7 +1,14 @@
 #pragma once // Define header once
 
 #include "../core/Position.hpp"
+// #include "input_controller.hpp" // ERROR: CREATES CIRCULAR DEPENDENCIES
 
+// Forward reference
+//  - There exists a type called chess::ui::DragState and will be defined
+//  somewhere else
+namespace chess::ui {
+struct DragState;
+}
 // namespace is good practice here to show ownership
 #include <SFML/Graphics/Font.hpp>
 #include <SFML/Graphics/Rect.hpp>
@@ -23,8 +30,8 @@ class BoardView {
     BoardView(sf::Vector2f topLeft, float squareSizePx);
 
     // Draw to board with any valid randerTarget
-    void draw(sf::RenderTarget &target,
-              const chess::core::Position &position) const;
+    void draw(sf::RenderTarget &target, const chess::core::Position &position,
+              const chess::ui::DragState *drag) const;
 
     int pixelToSquare(sf::Vector2f mouse) const;
 

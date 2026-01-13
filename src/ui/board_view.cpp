@@ -1,4 +1,5 @@
 #include "../../include/chess/ui/board_view.hpp"
+#include "../../include/chess/ui/input_controller.hpp"
 
 #include <SFML/Graphics/Rect.hpp>
 #include <SFML/Graphics/RectangleShape.hpp>
@@ -117,7 +118,8 @@ sf::IntRect BoardView::pieceToTextureRect(chess::core::Color color,
 
 /* ========= METHOD IMPLEMENTATIONS =========*/
 void BoardView::draw(sf::RenderTarget &target,
-                     const chess::core::Position &position) const {
+                     const chess::core::Position &position,
+                     const chess::ui::DragState *drag) const {
 
     // {} enforces stricter rules such as no narrowing conversion, typically
     // preffered over ()
@@ -169,7 +171,7 @@ void BoardView::draw(sf::RenderTarget &target,
         }
     }
 
-    // --- Draw chess pieces
+    // --- Draw chess pieces except dragged piece
     constexpr float SPRITE_W = 333.f; // Image width / 6
     constexpr float SPRITE_H = 334.f; // Image height / 2
 
@@ -178,8 +180,22 @@ void BoardView::draw(sf::RenderTarget &target,
     sprite.setScale(squareSizePx / SPRITE_W, squareSizePx / SPRITE_H);
 
     for (const auto &piece : position.getAllPieces()) {
+        if (drag && drag->active && piece.squareIdx == drag->piece.squareIdx)
+            continue;
         sprite.setTextureRect(pieceToTextureRect(piece.color, piece.piece));
         sprite.setPosition(squareToPixel(piece.squareIdx));
+        target.draw(sprite);
+    }
+
+    // --- Draw dragged piece
+    if (drag && drag->active) {
+        sprite.setTextureRect(
+            pieceToTextureRect(drag->piece.color, drag->piece.piece));
+
+        // center sprite relative to cursor
+        sprite.setPosition(drag->mousePos.x - squareSizePx / 2.f,
+                           drag->mousePos.y - squareSizePx / 2.f);
+
         target.draw(sprite);
     }
 }

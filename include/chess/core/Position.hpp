@@ -81,6 +81,11 @@ class Position {
     // --- Debugging
     void print_bitboard(std::uint64_t bb);
 
+    /* =============== LOGICAL GAME MOVES =============== */
+    // Move one piece square to square
+    void makeMove(int current_square, int final_square);
+    bool findPieceAt(int squareIdx, Color &outColor, PieceType &outPiece) const;
+
   private:
     // Bitboard for every piece -> 12 total
     // 2 x 6

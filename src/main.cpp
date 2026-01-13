@@ -5,6 +5,7 @@
 
 #include "../include/chess/core/Position.hpp"
 #include "../include/chess/ui/board_view.hpp"
+#include "../include/chess/ui/input_controller.hpp"
 #include <iostream>
 
 int main() {
@@ -30,6 +31,8 @@ int main() {
     chess::core::Position position;
     position.print_bitboard(position.getPieces(chess::core::PieceType::Pawn));
 
+    chess::ui::InputController input_controller;
+
     // ------ Main Event Loop ------
     // int counter = 0;
     while (window.isOpen() /*&& counter != 1*/) {
@@ -41,11 +44,13 @@ int main() {
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed)
                 window.close();
+
+            input_controller.handleEvent(event, window, boardView, position);
         }
 
         // Erase frame and replace it with the following color
         window.clear(sf::Color(30, 30, 30));
-        boardView.draw(window, position);
+        boardView.draw(window, position, input_controller.dragState());
         window.display();
     }
 

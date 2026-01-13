@@ -4,8 +4,8 @@
 #include <SFML/System/Vector2.hpp>
 #include <SFML/Window/Event.hpp>
 
-#include "../core/Position.hpp";
-#include "../ui/board_view.hpp";
+#include "../core/Position.hpp"
+#include "../ui/board_view.hpp"
 
 namespace chess::ui {
 
@@ -27,8 +27,8 @@ class InputController {
      *         position - update position on mouse release
      */
     void handleEvent(const sf::Event &event, const sf::RenderWindow &window,
-                     const chess::ui::BoardView board,
-                     chess::core::Position &position);
+                     const chess::ui::BoardView &board,
+                     chess::core::Position &Position);
 
     const DragState *dragState() const { return &drag; }
 
