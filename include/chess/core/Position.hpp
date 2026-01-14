@@ -12,6 +12,8 @@
 #include <string>
 #include <vector>
 
+#include "../config/DebugConfig.hpp"
+
 /**
  * Holds a snapshot of current Position
  * Used to keep track of positions and board logic
@@ -83,7 +85,8 @@ class Position {
 
     /* =============== LOGICAL GAME MOVES =============== */
     // Move one piece square to square
-    void makeMove(int current_square, int final_square);
+    void makeMove(int current_square, int final_square,
+                  const chess::config::DebugConfig &debugger);
     bool findPieceAt(int squareIdx, Color &outColor, PieceType &outPiece) const;
 
   private:

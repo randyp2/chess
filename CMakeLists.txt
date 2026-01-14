@@ -14,6 +14,7 @@ add_executable(chess
     src/ui/board_view.cpp
     src/core/Position.cpp
     src/ui/input_controller.cpp
+    src/config/DebugConfig.cpp
 )
 
 # Allow #include "chess/..." from include/ directory

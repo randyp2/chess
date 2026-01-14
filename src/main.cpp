@@ -3,12 +3,29 @@
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window/VideoMode.hpp>
 
+#include "../include/chess/config/DebugConfig.hpp"
 #include "../include/chess/core/Position.hpp"
 #include "../include/chess/ui/board_view.hpp"
 #include "../include/chess/ui/input_controller.hpp"
 #include <iostream>
 
-int main() {
+using chess::config::DebugConfig;
+DebugConfig parse_debug_config(int argc, char **argv) {
+    DebugConfig debugger = DebugConfig::disabled();
+
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+
+        if (arg == "--debug-bitboard")
+            debugger.enable_bitboards();
+    }
+
+    return debugger;
+}
+
+int main(int argc, char **argv) {
+
+    DebugConfig debugger = parse_debug_config(argc, argv);
 
     std::cout << "Humble beginnings..." << std::endl;
 
@@ -45,7 +62,8 @@ int main() {
             if (event.type == sf::Event::Closed)
                 window.close();
 
-            input_controller.handleEvent(event, window, boardView, position);
+            input_controller.handleEvent(event, window, boardView, position,
+                                         debugger);
         }
 
         // Erase frame and replace it with the following color

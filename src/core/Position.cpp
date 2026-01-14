@@ -5,6 +5,41 @@
 #include <iostream>
 #include <sstream>
 
+// Debugging
+namespace {
+void printDebug(const std::uint64_t bb, int idx) {
+
+    constexpr const char *CYAN = "\033[36m";
+    constexpr const char *RED = "\033[31m";
+    constexpr const char *GREEN = "\033[32m";
+    constexpr const char *RESET = "\033[0m";
+
+    // Debug output - Print original bitboard of piece moving
+    // Print right half index
+    for (int i = 63; i >= 0; --i) {
+        std::cout << CYAN << std::setw(2) << (i / 10) << RESET;
+    }
+    std::cout << "\n";
+
+    // Print bits
+    for (int i = 63; i >= 0; --i) {
+        if (idx == i)
+            std::cout << RED << std::setw(2) << ((bb >> i) & 1) << RESET;
+        else if ((bb >> i & 1) == 1)
+            std::cout << GREEN << std::setw(2) << ((bb >> i) & 1) << RESET;
+        else
+            std::cout << std::setw(2) << ((bb >> i) & 1);
+    }
+    std::cout << "\n";
+
+    // Print left half index
+    for (int i = 63; i >= 0; --i) {
+        std::cout << CYAN << std::setw(2) << (i % 10) << RESET;
+    }
+    std::cout << "\n" << "\n";
+}
+} // namespace
+
 namespace chess::core {
 
 /* ======================= ANONYMOUS NAMESPACE ======================= */
@@ -191,7 +226,8 @@ bool Position::findPieceAt(int squareIdx, Color &outColor,
     return false;
 }
 
-void Position::makeMove(int current_square, int final_square) {
+void Position::makeMove(int current_square, int final_square,
+                        const chess::config::DebugConfig &debugger) {
 
     // Same square move
     if (current_square == final_square)
@@ -202,6 +238,11 @@ void Position::makeMove(int current_square, int final_square) {
 
     if (!findPieceAt(current_square, currColor, currPiece))
         return;
+
+    if (debugger.print_bitboards()) {
+        std::cout << "Old: " << std::endl;
+        printDebug(bit_boards[idx(currColor)][idx(currPiece)], current_square);
+    }
 
     // Represent from and to destinations with a bit board
     std::uint64_t fromBB = 1ULL << current_square;
@@ -222,6 +263,11 @@ void Position::makeMove(int current_square, int final_square) {
 
     // Placing moving piece to final square
     bit_boards[idx(currColor)][idx(currPiece)] |= toBB;
+
+    if (debugger.print_bitboards()) {
+        std::cout << "New: " << std::endl;
+        printDebug(bit_boards[idx(currColor)][idx(currPiece)], final_square);
+    }
 
     side_to_move = (side_to_move == Color::White) ? Color::Black : Color::White;
 }
