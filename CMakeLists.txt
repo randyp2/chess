@@ -1,6 +1,8 @@
 # Minimum CMake version required to configure
 cmake_minimum_required(VERSION 3.20)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # Define project name and enable c++
 project(chess LANGUAGES CXX)
 
@@ -17,6 +19,11 @@ add_executable(chess
     src/config/DebugConfig.cpp
 )
 
+# TEMP: force SFML 2 include path (to avoid SFML 3 headers)
+target_include_directories(chess PRIVATE
+    /opt/homebrew/opt/sfml@2/include
+)
+
 # Allow #include "chess/..." from include/ directory
 # From any src compiled into chess yoiu can inlude chess/... files
 target_include_directories(chess PRIVATE include)
@@ -31,6 +38,16 @@ else ()
 endif()
 
 
-# --- SFML Integration
-find_package(SFML 2.5 COMPONENTS graphics window system REQUIRED) # Locate SFML
-target_link_libraries(chess PRIVATE sfml-graphics sfml-window sfml-system) # Pull in inlude directories
+# --- SFML Integration (SFML 2.x)
+find_package(SFML 2.5 REQUIRED COMPONENTS graphics window system)
+
+target_include_directories(chess PRIVATE
+    /opt/homebrew/opt/sfml@2/include
+)
+
+target_link_libraries(chess PRIVATE
+    sfml-graphics
+    sfml-window
+    sfml-system
+)
+
