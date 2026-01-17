@@ -1,4 +1,6 @@
 #include "../../include/chess/core/Position.hpp"
+#include "../../include/chess/core/Move.hpp"
+
 #include <cstdint>
 #include <cwctype>
 #include <iomanip>
@@ -226,8 +228,10 @@ bool Position::findPieceAt(int squareIdx, Color &outColor,
     return false;
 }
 
-void Position::makeMove(int current_square, int final_square,
+void Position::makeMove(const Move &move,
                         const chess::config::DebugConfig &debugger) {
+    const int current_square = move.getFrom();
+    const int final_square = move.getTo();
 
     // Same square move
     if (current_square == final_square)
@@ -254,6 +258,11 @@ void Position::makeMove(int current_square, int final_square,
     //  i.e. bitboard = 00101000 , fromBB = 00101000, ~fromBB = 11010111
     //  bitboard & ~fromBB = 0010000
     bit_boards[idx(currColor)][idx(currPiece)] &= ~fromBB;
+
+    // Determine type of move by using chess::core::MoveFlag
+    if (move.isEPCapture()) {
+        const epSquare = (currColor == Color::White) ? (to - 8) : (to + 8);
+    }
 
     // Clear final square
     for (int piece = 0; piece < 6; ++piece) {

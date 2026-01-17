@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "../config/DebugConfig.hpp"
+#include "../core/Move.hpp"
 #include "../core/Piece.hpp"
 
 /**
@@ -60,8 +61,7 @@ class Position {
 
     /* =============== LOGICAL GAME MOVES =============== */
     // Move one piece square to square
-    void makeMove(int current_square, int final_square,
-                  const chess::config::DebugConfig &debugger);
+    void makeMove(const Move &move, const chess::config::DebugConfig &debugger);
     bool findPieceAt(int squareIdx, Color &outColor, PieceType &outPiece) const;
 
   private:

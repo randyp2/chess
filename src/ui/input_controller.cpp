@@ -1,7 +1,9 @@
 #include "../../include/chess/ui/input_controller.hpp"
+#include "chess/core/Move.hpp"
 #include <SFML/System/Vector2.hpp>
 #include <SFML/Window/Event.hpp>
 
+#include <cstdint>
 #include <iostream>
 namespace chess::ui {
 
@@ -48,7 +50,11 @@ void InputController::handleEvent(const sf::Event &event,
         int targetSquare = board.pixelToSquare(drag.mousePos);
 
         if (targetSquare != -1) {
-            position.makeMove(drag.piece.squareIdx, targetSquare, debugger);
+            chess::core::Move move(
+                static_cast<std::uint8_t>(drag.piece.squareIdx),
+                static_cast<std::uint8_t>(targetSquare),
+                chess::core::MoveFlag::QUIET_MOVES);
+            position.makeMove(move, debugger);
         }
 
         drag.active = false;

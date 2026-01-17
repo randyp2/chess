@@ -105,20 +105,20 @@ class Move {
     }
 
     /* =========== GETTERS =========== */
-    constexpr MoveFlag getFlags() {
+    constexpr MoveFlag getFlags() const {
         return static_cast<MoveFlag>((move_ >> 12) & 0x0f);
     }
 
     constexpr std::uint16_t getFrom() const { return move_ & 0x3f; }
 
-    constexpr std::uint16_t getTo() const { return (move_ << 6) & 0x3f; }
+    constexpr std::uint16_t getTo() const { return (move_ >> 6) & 0x3f; }
 
     constexpr std::uint16_t getRawValue() const { return move_; }
 
     // Return from and to bits
     // Will be used to record from -> to moves to help with chess engine
     // Used in searching best from -> to moves given a position
-    constexpr std::uint16_t getButterflyIndex() { return move_ & 0x0fff; }
+    constexpr std::uint16_t getButterflyIndex() const { return move_ & 0x0fff; }
 
     /* =========== SETTERS =========== */
     void setFrom(std::uint16_t from) {
@@ -137,28 +137,23 @@ class Move {
 
     /* =========== HELPERS =========== */
     constexpr bool isDoublePP() const {
-        return (move_ &
-                (static_cast<std::uint16_t>(MoveFlag::DOUBLE_PP) << 12)) != 0;
+        return getFlags() == MoveFlag::DOUBLE_PP;
     }
 
     constexpr bool isKingCastle() const {
-        return (move_ &
-                (static_cast<std::uint16_t>(MoveFlag::KING_CASTLE) << 12)) != 0;
+        return getFlags() == MoveFlag::KING_CASTLE;
     }
 
     constexpr bool isQueenCastle() const {
-        return (move_ & (static_cast<std::uint16_t>(MoveFlag::QUEEN_CASTLE)
-                         << 12)) != 0;
+        return getFlags() == MoveFlag::QUEEN_CASTLE;
     }
 
     constexpr bool isCapture() const {
-        return (move_ &
-                (static_cast<std::uint16_t>(MoveFlag::CAPTURES) << 12)) != 0;
+        return getFlags() == MoveFlag::CAPTURES;
     }
 
     constexpr bool isEPCapture() const {
-        return (move_ &
-                (static_cast<std::uint16_t>(MoveFlag::EP_CAPTURE) << 12)) != 0;
+        return getFlags() == MoveFlag::EP_CAPTURE;
     }
 
     /* =========== OPERATOR OVERLADS =========== */
