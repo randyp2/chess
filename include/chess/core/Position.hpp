@@ -36,6 +36,9 @@ class Position {
      */
     Position(const std::string &);
 
+    /* =============== BASIC HELPERS =============== */
+    Color getSideToMove() const { return this->side_to_move; }
+
     /* =============== BITBOARD GETTERS =============== */
 
     // Return bitboard with specific color and piece
@@ -75,6 +78,12 @@ class Position {
         bit_boards{};
 
     Color side_to_move = Color::White;
+
+    // There can only be one en passant square in the entire game of chess
+    // If a pawn moves up twice then the current square it sits on is the ep
+    // square
+    //  This square is removed every other turn
+    int en_passant_square = -1;
 
     // --- Helpers
     void clear();

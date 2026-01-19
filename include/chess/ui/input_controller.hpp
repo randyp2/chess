@@ -6,6 +6,7 @@
 
 #include "../config/DebugConfig.hpp"
 #include "../core/Move.hpp"
+#include "../core/MoveGenerator.hpp"
 #include "../core/Position.hpp"
 #include "../ui/board_view.hpp"
 

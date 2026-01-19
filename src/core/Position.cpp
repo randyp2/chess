@@ -1,5 +1,6 @@
 #include "../../include/chess/core/Position.hpp"
 #include "../../include/chess/core/Move.hpp"
+#include "chess/core/Piece.hpp"
 
 #include <cstdint>
 #include <cwctype>
@@ -78,9 +79,19 @@ std::uint64_t Position::getPieces(PieceType piece) const {
            bit_boards[idx(Color::Black)][idx(piece)];
 }
 
-std::uint64_t Position::getOccupied(Color color) const { return 0ULL; }
+std::uint64_t Position::getOccupied(Color color) const {
+    std::uint64_t occupiedBB = 0ULL;
 
-std::uint64_t Position::getOccupied() const { return 0ULL; }
+    for (int piece = 0; piece < 6; ++piece) {
+        occupiedBB |= bit_boards[idx(color)][piece];
+    }
+
+    return occupiedBB;
+}
+
+std::uint64_t Position::getOccupied() const {
+    return getOccupied(Color::White) | getOccupied(Color::Black);
+}
 
 std::vector<PieceOnSquare> Position::getAllPieces() const {
     std::vector<PieceOnSquare> returner;
@@ -259,19 +270,61 @@ void Position::makeMove(const Move &move,
     //  bitboard & ~fromBB = 0010000
     bit_boards[idx(currColor)][idx(currPiece)] &= ~fromBB;
 
-    // Determine type of move by using chess::core::MoveFlag
-    if (move.isEPCapture()) {
-        const epSquare = (currColor == Color::White) ? (to - 8) : (to + 8);
+    /* --- Types of moves --- */
+
+    // Castling
+    int rookFrom = -1;
+    int rookTo = -1;
+
+    if (move.isKingCastle()) {
+        rookFrom = (Color::White == currColor) ? 0 : 56;
+        rookTo = (Color::White == currColor) ? 2 : 58;
+
+    } else if (move.isQueenCastle()) {
+        rookFrom = (Color::White == currColor) ? 7 : 63;
+        rookTo = (Color::White == currColor) ? 4 : 60;
     }
 
-    // Clear final square
-    for (int piece = 0; piece < 6; ++piece) {
-        bit_boards[idx(Color::White)][piece] &= ~toBB;
-        bit_boards[idx(Color::Black)][piece] &= ~toBB;
+    if (rookFrom != -1) {
+        const std::uint64_t rookFromMask = 1ULL << rookFrom;
+        const std::uint64_t rookToMask = 1ULL << rookTo;
+
+        // Remove rook
+        bit_boards[idx(currColor)][idx(PieceType::Rook)] &= ~rookFromMask;
+        // Place rook
+        bit_boards[idx(currColor)][idx(PieceType::Rook)] |= rookToMask;
+    }
+
+    // En Passant Capture
+    if (move.isEPCapture()) {
+        // The captured pawn is behind the final_square
+        // -8 : Go down a rank
+        // +8 : Go up a rank
+        const int epCaptureSquare =
+            (Color::White == currColor) ? final_square - 8 : final_square + 8;
+
+        const std::uint64_t mask = 1ULL << epCaptureSquare;
+
+        bit_boards[idx(Color::White)][idx(PieceType::Pawn)] &= ~mask;
+        bit_boards[idx(Color::Black)][idx(PieceType::Pawn)] &= ~mask;
+    } else if (move.isCapture()) {
+        // Clear final square
+        for (int piece = 0; piece < 6; ++piece) {
+            bit_boards[idx(Color::White)][piece] &= ~toBB;
+            bit_boards[idx(Color::Black)][piece] &= ~toBB;
+        }
     }
 
     // Placing moving piece to final square
     bit_boards[idx(currColor)][idx(currPiece)] |= toBB;
+
+    // Populate en passant square
+    if (move.isDoublePP()) {
+        this->en_passant_square =
+            (Color::White == currColor) ? final_square - 8 : final_square + 8;
+    } else {
+        this->en_passant_square = -1; // Reset back
+    }
 
     if (debugger.print_bitboards()) {
         std::cout << "New: " << std::endl;

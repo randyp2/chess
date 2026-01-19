@@ -85,6 +85,7 @@ inline const char *to_string(MoveFlag flag) {
 class Move {
 
   public:
+    constexpr Move() : move_(0) {}
     /**
      * Parameterized constructor
      *
