@@ -3,7 +3,6 @@
 #include "chess/core/Piece.hpp"
 
 #include <cstdint>
-#include <ios>
 #include <stdexcept>
 
 namespace chess::core {
@@ -94,8 +93,14 @@ void MoveGenerator::generatePawnMoves(const Position &pos, MoveList &moves) {
 
     // --- Generate double pawn pushes ---
     std::uint64_t nonMovedPawns = pawnsBB & startRankMask;
+    std::uint64_t singlePushFromStart = singlePawnPush;
+    if (isWhiteMove)
+        singlePushFromStart &= (nonMovedPawns << 8);
+    else
+        singlePushFromStart &= (nonMovedPawns >> 8);
+
     std::uint64_t doublePawnPush =
-        isWhiteMove ? (nonMovedPawns << 16) : (nonMovedPawns >> 16);
+        isWhiteMove ? (singlePushFromStart << 8) : (singlePushFromStart >> 8);
     doublePawnPush &= emptySquaresBB;
 
     // Add double pawn push to moves
