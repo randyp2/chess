@@ -1,4 +1,5 @@
 #include "../../include/chess/core/MoveGenerator.hpp"
+#include "chess/core/BitBoard.hpp"
 #include "chess/core/Move.hpp"
 #include "chess/core/Piece.hpp"
 
@@ -7,16 +8,8 @@
 
 namespace chess::core {
 
-namespace {
-
-// Pop the least significant 1's bit and return the number of trailing zeroes
-int popLSB(std::uint64_t &bb) {
-    int num_zeroes = __builtin_ctzll(bb);
-    bb &= bb - 1;
-    return num_zeroes;
-}
-
-} // namespace
+// Short namespace for the bitboard utility file
+namespace bb = chess::core::BitBoard;
 
 // Generate all pseudo-legal moves given a position
 void MoveGenerator::generatePseudoLegal(const Position &pos, MoveList &moves) {}
@@ -58,12 +51,13 @@ void MoveGenerator::generatePawnMoves(const Position &pos, MoveList &moves) {
                                             : pos.getOccupied(Color::White);
 
     // Start rank and promotion rank
-    const std::uint64_t startRankMask = isWhiteMove ? RANK_2 : RANK_7;
-    const std::uint64_t promotionRankMask = isWhiteMove ? RANK_8 : RANK_1;
+    const std::uint64_t startRankMask = isWhiteMove ? bb::RANK_2 : bb::RANK_7;
+    const std::uint64_t promotionRankMask =
+        isWhiteMove ? bb::RANK_8 : bb::RANK_1;
 
     // --- Generate single pawn pushes ---
     std::uint64_t singlePawnPush =
-        isWhiteMove ? (pawnsBB << 8) : (pawnsBB >> 8);
+        isWhiteMove ? bb::shift_up(pawnsBB) : bb::shift_down(pawnsBB);
     singlePawnPush &= emptySquaresBB; // Only push onto empty squares
 
     std::uint64_t quietPush = singlePawnPush & ~promotionRankMask;
@@ -72,7 +66,7 @@ void MoveGenerator::generatePawnMoves(const Position &pos, MoveList &moves) {
     // Add quiet moves to MoveList
     while (quietPush) {
 
-        int targetSquare = popLSB(quietPush);
+        int targetSquare = bb::pop_lsb(quietPush);
         int startSquare = targetSquare - pushOffset;
 
         moves.add(Move(static_cast<std::uint8_t>(startSquare),
@@ -83,7 +77,7 @@ void MoveGenerator::generatePawnMoves(const Position &pos, MoveList &moves) {
     // Add promotion moves to moves
     while (promotionPush) {
 
-        int targetSquare = popLSB(promotionPush);
+        int targetSquare = bb::pop_lsb(promotionPush);
         int startSquare = targetSquare - pushOffset;
 
         moves.add(Move(static_cast<std::uint8_t>(startSquare),
@@ -105,7 +99,7 @@ void MoveGenerator::generatePawnMoves(const Position &pos, MoveList &moves) {
 
     // Add double pawn push to moves
     while (doublePawnPush) {
-        int targetSquare = popLSB(doublePawnPush);
+        int targetSquare = bb::pop_lsb(doublePawnPush);
         int startSquare = targetSquare - (pushOffset * 2);
 
         moves.add(Move(static_cast<std::uint8_t>(startSquare),
@@ -115,17 +109,17 @@ void MoveGenerator::generatePawnMoves(const Position &pos, MoveList &moves) {
 
     // --- Generate diagonal captures ---
     // Create bitboard for left and right captures
-    std::uint64_t leftCaptures =
-        isWhiteMove ? (pawnsBB & NOT_FILE_A) << 7 : (pawnsBB & NOT_FILE_A) >> 7;
-    std::uint64_t rightCaptures =
-        isWhiteMove ? (pawnsBB & NOT_FILE_H) << 9 : (pawnsBB & NOT_FILE_H) >> 9;
+    std::uint64_t leftCaptures = isWhiteMove ? (pawnsBB & bb::NOT_FILE_A) << 7
+                                             : (pawnsBB & bb::NOT_FILE_A) >> 7;
+    std::uint64_t rightCaptures = isWhiteMove ? (pawnsBB & bb::NOT_FILE_H) << 9
+                                              : (pawnsBB & bb::NOT_FILE_H) >> 9;
 
     // Only valid squares are ones with enemy pieces
     leftCaptures &= enemyPiecesBB;
     rightCaptures &= enemyPiecesBB;
 
     while (leftCaptures) {
-        int targetSquare = popLSB(leftCaptures);
+        int targetSquare = bb::pop_lsb(leftCaptures);
         int startSquare = targetSquare - captureOffsetLeft;
 
         moves.add(Move(static_cast<std::uint8_t>(startSquare),
@@ -134,7 +128,7 @@ void MoveGenerator::generatePawnMoves(const Position &pos, MoveList &moves) {
     }
 
     while (rightCaptures) {
-        int targetSquare = popLSB(rightCaptures);
+        int targetSquare = bb::pop_lsb(rightCaptures);
         int startSquare = targetSquare - captureOffsetRight;
 
         moves.add(Move(static_cast<std::uint8_t>(startSquare),

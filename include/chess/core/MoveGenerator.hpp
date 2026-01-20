@@ -1,23 +1,11 @@
 #pragma once
 
+#include "../core/BitBoard.hpp"
 #include "../core/Move.hpp"
 #include "../core/Position.hpp"
 #include <cstdint>
 
 namespace chess::core {
-
-// Helpful rank masks
-inline constexpr std::uint64_t RANK_1 = 0x00000000000000FFULL;
-inline constexpr std::uint64_t RANK_2 = 0x000000000000FF00ULL;
-inline constexpr std::uint64_t RANK_7 = 0x00FF000000000000ULL;
-inline constexpr std::uint64_t RANK_8 = 0xFF00000000000000ULL;
-
-// Helpful file masks
-inline constexpr std::uint64_t FILE_A = 0x8080808080808080ULL;
-inline constexpr std::uint64_t FILE_H = 0x0101010101010101ULL;
-
-inline constexpr std::uint64_t NOT_FILE_A = ~FILE_A;
-inline constexpr std::uint64_t NOT_FILE_H = ~FILE_H;
 
 inline constexpr std::size_t MAX_MOVES = 256;
 // Keep track of pseudo-legal moves and move count
