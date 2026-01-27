@@ -50,6 +50,7 @@ void InputController::handleEvent(const sf::Event &event,
              event.mouseButton.button == sf::Mouse::Left && drag.active) {
 
         int targetSquare = board.pixelToSquare(drag.mousePos);
+        std::cout << "Target square: " << targetSquare << "\n";
 
         if (targetSquare != -1) {
             core::MoveList moves;

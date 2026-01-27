@@ -334,7 +334,7 @@ void Position::makeMove(const Move &move,
     side_to_move = (side_to_move == Color::White) ? Color::Black : Color::White;
 }
 
-void Position::print_bitboard(std::uint64_t bb) {
+void Position::print_bitboard(std::uint64_t bb) const {
 
     for (int rank = 7; rank >= 0; --rank) {
         std::cout << std::setw(2) << std::to_string(rank + 1) << "  ";

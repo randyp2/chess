@@ -21,7 +21,6 @@ void generateLegal(const Position &pos, MoveList &moves) {
 }
 
 /* ============= HELPERS TO GENERATE MOVES ============= */
-
 void MoveGenerator::generatePawnMoves(const Position &pos, MoveList &moves) {
 
     const bool isWhiteMove = pos.getSideToMove() == Color::White;
@@ -33,8 +32,10 @@ void MoveGenerator::generatePawnMoves(const Position &pos, MoveList &moves) {
 
     // Types of moves
     const int pushOffset = pushDir * 8;
-    const int captureOffsetLeft = pushDir * 7;  // Left-diagonal catpure
-    const int captureOffsetRight = pushDir * 9; // Right-diagonal catpure
+    const int captureOffsetNW = 9;
+    const int captureOffsetNE = 7;
+    const int captureOffsetSW = -7;
+    const int captureOffsetSE = -9;
 
     // Validates enemy square to capture
     const std::uint64_t occupied = pos.getOccupied();
@@ -57,7 +58,7 @@ void MoveGenerator::generatePawnMoves(const Position &pos, MoveList &moves) {
 
     // --- Generate single pawn pushes ---
     std::uint64_t singlePawnPush =
-        isWhiteMove ? bb::shift_up(pawnsBB) : bb::shift_down(pawnsBB);
+        isWhiteMove ? bb::shift_north(pawnsBB) : bb::shift_south(pawnsBB);
     singlePawnPush &= emptySquaresBB; // Only push onto empty squares
 
     std::uint64_t quietPush = singlePawnPush & ~promotionRankMask;
@@ -89,12 +90,13 @@ void MoveGenerator::generatePawnMoves(const Position &pos, MoveList &moves) {
     std::uint64_t nonMovedPawns = pawnsBB & startRankMask;
     std::uint64_t singlePushFromStart = singlePawnPush;
     if (isWhiteMove)
-        singlePushFromStart &= (nonMovedPawns << 8);
+        singlePushFromStart &= (bb::shift_north(nonMovedPawns));
     else
-        singlePushFromStart &= (nonMovedPawns >> 8);
+        singlePushFromStart &= (bb::shift_south(nonMovedPawns));
 
-    std::uint64_t doublePawnPush =
-        isWhiteMove ? (singlePushFromStart << 8) : (singlePushFromStart >> 8);
+    std::uint64_t doublePawnPush = isWhiteMove
+                                       ? (bb::shift_north(singlePushFromStart))
+                                       : (bb::shift_south(singlePushFromStart));
     doublePawnPush &= emptySquaresBB;
 
     // Add double pawn push to moves
@@ -109,18 +111,30 @@ void MoveGenerator::generatePawnMoves(const Position &pos, MoveList &moves) {
 
     // --- Generate diagonal captures ---
     // Create bitboard for left and right captures
-    std::uint64_t leftCaptures = isWhiteMove ? (pawnsBB & bb::NOT_FILE_A) << 7
-                                             : (pawnsBB & bb::NOT_FILE_A) >> 7;
-    std::uint64_t rightCaptures = isWhiteMove ? (pawnsBB & bb::NOT_FILE_H) << 9
-                                              : (pawnsBB & bb::NOT_FILE_H) >> 9;
+    std::uint64_t leftCaptures = isWhiteMove ? (bb::shift_north_west(pawnsBB))
+                                             : (bb::shift_south_west(pawnsBB));
+    std::uint64_t rightCaptures = isWhiteMove ? (bb::shift_north_east(pawnsBB))
+                                              : (bb::shift_south_east(pawnsBB));
 
     // Only valid squares are ones with enemy pieces
+    std::cout << "Left captures: \n";
+    pos.print_bitboard(leftCaptures);
+    std::cout << "\n";
+
+    std::cout << "Right captures: \n";
+    pos.print_bitboard(rightCaptures);
+    std::cout << "\n";
+
+    std::cout << "Enemy pieces: \n";
+    pos.print_bitboard(enemyPiecesBB);
+    std::cout << "\n";
     leftCaptures &= enemyPiecesBB;
     rightCaptures &= enemyPiecesBB;
 
     while (leftCaptures) {
         int targetSquare = bb::pop_lsb(leftCaptures);
-        int startSquare = targetSquare - captureOffsetLeft;
+        int startSquare = isWhiteMove ? targetSquare - captureOffsetNW
+                                      : targetSquare - captureOffsetSW;
 
         moves.add(Move(static_cast<std::uint8_t>(startSquare),
                        static_cast<std::uint8_t>(targetSquare),
@@ -129,7 +143,8 @@ void MoveGenerator::generatePawnMoves(const Position &pos, MoveList &moves) {
 
     while (rightCaptures) {
         int targetSquare = bb::pop_lsb(rightCaptures);
-        int startSquare = targetSquare - captureOffsetRight;
+        int startSquare = isWhiteMove ? targetSquare - captureOffsetNE
+                                      : targetSquare - captureOffsetSE;
 
         moves.add(Move(static_cast<std::uint8_t>(startSquare),
                        static_cast<std::uint8_t>(targetSquare),
@@ -184,4 +199,16 @@ std::uint64_t rookAttacks(std::uint64_t rooks, std::uint64_t occupied) {
     throw std::runtime_error("Function not implemented");
 }
 
+void MoveGenerator::parse_move(std::uint64_t bit_board, MoveList &moves,
+                               int offset) {
+    // Add quiet moves to MoveList
+    while (bit_board) {
+        int targetSquare = bb::pop_lsb(bit_board);
+        int startSquare = targetSquare - offset;
+
+        moves.add(Move(static_cast<std::uint8_t>(startSquare),
+                       static_cast<std::uint8_t>(targetSquare),
+                       MoveFlag::QUIET_MOVES));
+    }
+}
 } // namespace chess::core

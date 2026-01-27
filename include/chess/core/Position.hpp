@@ -60,7 +60,7 @@ class Position {
     std::vector<PieceOnSquare> getAllPieces() const;
 
     // --- Debugging
-    void print_bitboard(std::uint64_t bb);
+    void print_bitboard(std::uint64_t bb) const;
 
     /* =============== LOGICAL GAME MOVES =============== */
     // Move one piece square to square

@@ -48,5 +48,8 @@ class MoveGenerator {
                                      std::uint64_t occupied);
 
     static bool isInCheck(const Position &pos);
+
+    // --- Helpers to parse and add moves
+    void parse_move(std::uint64_t bit_board, MoveList &moves, int offset);
 };
 } // namespace chess::core
