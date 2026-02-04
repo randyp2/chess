@@ -16,7 +16,7 @@ DebugConfig parse_debug_config(int argc, char **argv) {
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
 
-        if (arg == "--debug-bitboard")
+        if (arg == "--debug-bb")
             debugger.enable_bitboards();
     }
 
@@ -46,6 +46,7 @@ int main(int argc, char **argv) {
     chess::ui::BoardView boardView({80.0f, 80.0f}, // top-left corner of board
                                    squareSize);
     chess::core::Position position;
+
     position.print_bitboard(position.getPieces(chess::core::PieceType::Pawn));
 
     chess::ui::InputController input_controller;

@@ -320,10 +320,11 @@ void Position::makeMove(const Move &move,
 
     // Populate en passant square
     if (move.isDoublePP()) {
-        this->en_passant_square =
+        int en_passant_square =
             (Color::White == currColor) ? final_square - 8 : final_square + 8;
+        this->en_passant_square_bb = 1ULL << en_passant_square;
     } else {
-        this->en_passant_square = -1; // Reset back
+        this->en_passant_square_bb = 0ULL;
     }
 
     if (debugger.print_bitboards()) {

@@ -4,7 +4,6 @@
 #include <SFML/System/Vector2.hpp>
 
 #include <cstddef>
-#include <cstdint>
 #include <iostream>
 namespace chess::ui {
 
@@ -55,11 +54,12 @@ void InputController::handleEvent(const sf::Event &event,
         if (targetSquare != -1) {
             core::MoveList moves;
             moves.clear();
-            core::MoveGenerator::generatePawnMoves(position, moves);
+            core::MoveGenerator::generatePseudoLegal(position, moves, debugger);
 
             // --- Testing pawn moves (QUIET AND PUSH)
             bool found = false;
             core::Move chosenMove;
+
             // Iterate until you find the move that matches the users move
             for (std::size_t i = 0; i < moves.size; ++i) {
                 const chess::core::Move &m = moves.moves[i];
@@ -81,7 +81,7 @@ void InputController::handleEvent(const sf::Event &event,
             // chess::core::Move move(
             //     static_cast<std::uint8_t>(drag.piece.squareIdx),
             //     static_cast<std::uint8_t>(targetSquare),
-            //     chess::core::MoveFlag::QUEEN_CASTLE);
+            //     chess::core::MoveFlag::KING_CASTLE);
             // position.makeMove(move, debugger);
         }
 

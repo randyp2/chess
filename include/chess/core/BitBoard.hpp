@@ -8,7 +8,11 @@ namespace chess::core::BitBoard {
 using BitBoard = std::uint64_t;
 
 /* ================== FILE MASKS ================== */
-constexpr BitBoard FILE_A = 0x1010101010101010ULL;
+
+/**
+ * 10000000
+ */
+constexpr BitBoard FILE_A = 0x8080808080808080ULL;
 constexpr BitBoard FILE_B = FILE_A >> 1;
 constexpr BitBoard FILE_C = FILE_B >> 1;
 constexpr BitBoard FILE_D = FILE_C >> 1;
@@ -19,6 +23,8 @@ constexpr BitBoard FILE_H = FILE_G >> 1;
 
 // To prevent wrapping
 constexpr BitBoard NOT_FILE_A = ~FILE_A;
+constexpr BitBoard NOT_FILE_B = ~FILE_B;
+constexpr BitBoard NOT_FILE_G = ~FILE_G;
 constexpr BitBoard NOT_FILE_H = ~FILE_H;
 
 /* ================== RANK MASKS ================== */
@@ -68,6 +74,17 @@ inline BitBoard shift_south_east(BitBoard bb) noexcept {
 }
 inline BitBoard shift_south_west(BitBoard bb) noexcept {
     return shift_south(shift_west(bb));
+}
+
+inline BitBoard shift_left(BitBoard bb, int val) noexcept { return bb << val; }
+
+inline BitBoard shift_right(BitBoard bb, int val) noexcept { return bb >> val; }
+
+inline BitBoard shift_up(BitBoard bb, int val) noexcept {
+    return bb << 8 * val;
+}
+inline BitBoard shift_down(BitBoard bb, int val) noexcept {
+    return bb >> 8 * val;
 }
 
 } // namespace chess::core::BitBoard

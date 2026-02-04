@@ -51,6 +51,10 @@ class Position {
     // Return occupied bitboard squares
     std::uint64_t getOccupied() const;
 
+    std::uint64_t getEnPassantSquareBB() const {
+        return this->en_passant_square_bb;
+    }
+
     /* =============== UI GETTERS =============== */
     /**
      * Return info about all possible pieces - 32 pieces
@@ -83,7 +87,7 @@ class Position {
     // If a pawn moves up twice then the current square it sits on is the ep
     // square
     //  This square is removed every other turn
-    int en_passant_square = -1;
+    std::uint64_t en_passant_square_bb = 0ULL;
 
     // --- Helpers
     void clear();
