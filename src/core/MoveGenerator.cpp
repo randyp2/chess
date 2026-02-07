@@ -30,46 +30,66 @@ void generateLegal(const Position &pos, MoveList &moves) {
 
 void MoveGenerator::initAttackTables(const Position &pos,
                                      const chess::config::DebugConfig &debug) {
-    // for (int square = 0; square < 64; ++square) {
-    const std::uint64_t bit_board = 1ULL << 7;
+    for (int square = 0; square < 64; ++square) {
+        const std::uint64_t bit_board = 1ULL << square;
 
-    std::cout << "Current square: \n";
-    pos.print_bitboard(bit_board);
-    std::cout << "\n";
+        if (debug.print_bitboards()) {
+            std::cout << "Current square: \n";
+            pos.print_bitboard(bit_board);
+            std::cout << "\n";
+        }
 
-    // --- Generate knight attacks
-    std::uint64_t knight_attacks_bb = 0ULL;
+        // --- Generate knight attacks
+        std::uint64_t knight_attacks_bb = 0ULL;
 
-    knight_attacks_bb |= bit_board;
-    knight_attacks_bb |=
-        bb::shift_left(bb::shift_up(bit_board, 2), 1) & (bb::NOT_FILE_H);
-    knight_attacks_bb |=
-        bb::shift_left(bb::shift_up(bit_board, 1), 2) & (bb::NOT_FILE_G);
-    knight_attacks_bb |=
-        bb::shift_right(bb::shift_up(bit_board, 2), 1) & (bb::NOT_FILE_A);
-    knight_attacks_bb |=
-        bb::shift_right(bb::shift_up(bit_board, 1), 2) & (bb::NOT_FILE_B);
+        knight_attacks_bb |= bit_board;
 
-    knight_attacks_bb |= bb::shift_left(bb::shift_down(bit_board, 1), 2);
-    knight_attacks_bb |= bb::shift_right(bb::shift_down(bit_board, 1), 2);
-    knight_attacks_bb |= bb::shift_left(bb::shift_down(bit_board, 2), 1);
-    knight_attacks_bb |= bb::shift_right(bb::shift_down(bit_board, 2), 1);
+        knight_attacks_bb |=
+            bb::shift_left(bb::shift_up(bit_board, 2), 1) & (bb::NOT_FILE_H);
+        knight_attacks_bb |=
+            bb::shift_left(bb::shift_up(bit_board, 1), 2) & (bb::NOT_FILE_G);
+        knight_attacks_bb |=
+            bb::shift_right(bb::shift_up(bit_board, 2), 1) & (bb::NOT_FILE_A);
+        knight_attacks_bb |=
+            bb::shift_right(bb::shift_up(bit_board, 1), 2) & (bb::NOT_FILE_B);
 
-    // knight_attacks_bb |= bb::shift_left(bit_board, 17) & bb::NOT_FILE_A;
-    // knight_attacks_bb |= bb::shift_left(bit_board, 15) & bb::NOT_FILE_A;
-    // knight_attacks_bb |= bb::shift_left(bit_board, 10) & bb::NOT_FILE_A;
-    // knight_attacks_bb |=
-    //     bb::shift_left(bit_board, 6) & (bb::FILE_G | bb::FILE_H);
-    // knight_attacks_bb |= bb::shift_right(bit_board, 17) & bb::NOT_FILE_H;
-    // knight_attacks_bb |= bb::shift_right(bit_board, 15) & bb::NOT_FILE_H;
-    // knight_attacks_bb |= bb::shift_right(bit_board, 10) & bb::NOT_FILE_H;
-    // knight_attacks_bb |= bb::shift_right(bit_board, 6) & bb::NOT_FILE_H;
+        knight_attacks_bb |=
+            bb::shift_left(bb::shift_down(bit_board, 1), 2) & (bb::NOT_FILE_G);
+        knight_attacks_bb |=
+            bb::shift_left(bb::shift_down(bit_board, 2), 1) & (bb::NOT_FILE_H);
+        knight_attacks_bb |=
+            bb::shift_right(bb::shift_down(bit_board, 1), 2) & (bb::NOT_FILE_B);
+        knight_attacks_bb |=
+            bb::shift_right(bb::shift_down(bit_board, 2), 1) & (bb::NOT_FILE_A);
 
-    std::cout << "Attack square: \n";
-    pos.print_bitboard(knight_attacks_bb);
-    std::cout << "\n";
-    // knight_attacks_bb |= bit_board <<
-    // }
+        // if (debug.print_bitboards()) {
+        std::cout << "Attack square [" << "MOVE#" << square << "] : \n";
+        pos.print_bitboard(knight_attacks_bb);
+        std::cout << "\n";
+        // }
+
+        // --- Generate king attacks
+        std::uint64_t king_attacks_bb = 0ULL;
+
+        king_attacks_bb |= bit_board;
+
+        king_attacks_bb |= bb::shift_north(bit_board);
+        king_attacks_bb |= bb::shift_south(bit_board);
+        king_attacks_bb |= bb::shift_east(bit_board);
+        king_attacks_bb |= bb::shift_west(bit_board);
+        king_attacks_bb |= bb::shift_north_west(bit_board);
+        king_attacks_bb |= bb::shift_north_east(bit_board);
+        king_attacks_bb |= bb::shift_south_west(bit_board);
+        king_attacks_bb |= bb::shift_south_east(bit_board);
+
+        if (debug.print_bitboards()) {
+            std::cout << "King attacks: \n";
+            pos.print_bitboard(king_attacks_bb);
+            std::cout << "\n";
+        }
+
+        // knight_attacks_bb |= bit_board <<
+    }
 }
 
 /* ============= HELPERS TO GENERATE MOVES ============= */
