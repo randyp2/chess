@@ -48,3 +48,13 @@ TL;DRL: Keep king safety in mind
 
  **1) One Pawn Move**
 
+#### STATIC ATTACKS VS DYNAMIC ATTACKS
+*Static attacks:* pieces who attacks square remain the same and non dependent on blocking pieces
+- Knights 
+- Kings
+- Pawns 
+*Dynamic Attacks:* pieces who attacks square remain dependent on sliding pieces and so on
+- Queen
+- Rook
+- Bishop
+

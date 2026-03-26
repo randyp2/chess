@@ -20,11 +20,6 @@ add_executable(chess
     src/core/MoveGenerator.cpp
 )
 
-# TEMP: force SFML 2 include path (to avoid SFML 3 headers)
-target_include_directories(chess PRIVATE
-    /opt/homebrew/opt/sfml@2/include
-)
-
 # Allow #include "chess/..." from include/ directory
 # From any src compiled into chess yoiu can inlude chess/... files
 target_include_directories(chess PRIVATE include)
@@ -40,15 +35,18 @@ endif()
 
 
 # --- SFML Integration (SFML 2.x)
-find_package(SFML 2.5 REQUIRED COMPONENTS graphics window system)
+if (APPLE)
+    # Help CMake find Homebrew's keg-only sfml@2 package on macOS.
+    list(APPEND CMAKE_PREFIX_PATH
+        /opt/homebrew/opt/sfml@2
+        /usr/local/opt/sfml@2
+    )
+endif()
 
-target_include_directories(chess PRIVATE
-    /opt/homebrew/opt/sfml@2/include
-)
+find_package(SFML 2.5 REQUIRED COMPONENTS graphics window system)
 
 target_link_libraries(chess PRIVATE
     sfml-graphics
     sfml-window
     sfml-system
 )
-

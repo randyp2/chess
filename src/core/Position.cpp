@@ -246,8 +246,8 @@ void Position::makeMove(const Move &move,
 
     // Same square move
     if (current_square == final_square)
-        return;
 
+        return;
     Color currColor;
     PieceType currPiece;
 
