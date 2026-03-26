@@ -9,6 +9,7 @@
 #include <stdexcept>
 
 namespace chess::core {
+// hello testing
 
 // Short namespace for the bitboard utility file
 namespace bb = chess::core::BitBoard;
