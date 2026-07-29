@@ -105,15 +105,11 @@ class Move {
         move_ = flags_encoded | to_encoded | from_encoded;
     }
 
-    /* =========== GETTERS =========== */
     constexpr MoveFlag getFlags() const {
         return static_cast<MoveFlag>((move_ >> 12) & 0x0f);
     }
-
     constexpr std::uint16_t getFrom() const { return move_ & 0x3f; }
-
     constexpr std::uint16_t getTo() const { return (move_ >> 6) & 0x3f; }
-
     constexpr std::uint16_t getRawValue() const { return move_; }
 
     // Return from and to bits
@@ -121,47 +117,37 @@ class Move {
     // Used in searching best from -> to moves given a position
     constexpr std::uint16_t getButterflyIndex() const { return move_ & 0x0fff; }
 
-    /* =========== SETTERS =========== */
     void setFrom(std::uint16_t from) {
-        // Zero out the last 6 bits
-        //  - Take ones compliment of 0x3f = 0b0011 1111
+        //  ~0x3f = 0b0011 1111
         move_ &= ~0x3f;
         move_ |= (from & 0x3f);
     }
 
     void setTo(std::uint16_t to) {
-        // Zero out the middle 6 bits
-        //  - Take ones compliment of 0xFC0 =  0b0000 1111 1100 0000
+        // ~0xFC0 =  0b0000 1111 1100 0000
         move_ &= ~0xfc0;
         move_ |= ((to & 0x3f) << 6);
     }
 
-    /* =========== HELPERS =========== */
     constexpr bool isDoublePP() const {
         return getFlags() == MoveFlag::DOUBLE_PP;
     }
-
     constexpr bool isKingCastle() const {
         return getFlags() == MoveFlag::KING_CASTLE;
     }
-
     constexpr bool isQueenCastle() const {
         return getFlags() == MoveFlag::QUEEN_CASTLE;
     }
-
     constexpr bool isCapture() const {
         return getFlags() == MoveFlag::CAPTURES;
     }
-
     constexpr bool isEPCapture() const {
         return getFlags() == MoveFlag::EP_CAPTURE;
     }
 
-    /* =========== OPERATOR OVERLADS =========== */
     bool operator==(Move other) const {
         return (move_ & 0xffff) == (other.move_ & 0xffff);
     }
-
     bool operator!=(Move other) const {
         return (move_ & 0xffff) != (other.move_ & 0xffff);
     }

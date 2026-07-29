@@ -5,22 +5,78 @@
 #include "chess/core/Piece.hpp"
 
 #include <cstdint>
-#include <iostream>
 #include <stdexcept>
 
 namespace chess::core {
-// hello testing
-
-// Short namespace for the bitboard utility file
 namespace bb = chess::core::BitBoard;
 
-// Generate all pseudo-legal moves given a position
+std::uint64_t MoveGenerator::knightAttacks[64]{};
+std::uint64_t MoveGenerator::kingAttacks[64]{};
+
+namespace {
+
+/// @brief Calculate all possible knight moves given the knights current pos
+std::uint64_t calculateKnightAttacks(const std::uint64_t square) {
+    std::uint64_t knight_attacks_bb = 0ULL;
+
+    knight_attacks_bb |=
+        bb::shift_left(bb::shift_up(square, 2), 1) & (bb::NOT_FILE_H);
+    knight_attacks_bb |=
+        bb::shift_right(bb::shift_up(square, 2), 1) & (bb::NOT_FILE_A);
+
+    knight_attacks_bb |= bb::shift_left(bb::shift_up(square, 1), 2) &
+                         (bb::NOT_FILE_G & bb::NOT_FILE_H);
+    knight_attacks_bb |= bb::shift_right(bb::shift_up(square, 1), 2) &
+                         (bb::NOT_FILE_A & bb::NOT_FILE_B);
+
+    knight_attacks_bb |=
+        bb::shift_right(bb::shift_down(square, 2), 1) & (bb::NOT_FILE_A);
+    knight_attacks_bb |=
+        bb::shift_left(bb::shift_down(square, 2), 1) & (bb::NOT_FILE_H);
+
+    knight_attacks_bb |= bb::shift_left(bb::shift_down(square, 1), 2) &
+                         (bb::NOT_FILE_G & bb::NOT_FILE_H);
+    knight_attacks_bb |= bb::shift_right(bb::shift_down(square, 1), 2) &
+                         (bb::NOT_FILE_B & bb::NOT_FILE_A);
+
+    return knight_attacks_bb;
+}
+
+/// @brief Calcualte all possible moves of a king from starting square
+std::uint64_t calculateKingAttacks(const std::uint64_t square) {
+    std::uint64_t king_attacks_bb = 0ULL;
+
+    king_attacks_bb |= bb::shift_north(square);
+    king_attacks_bb |= bb::shift_south(square);
+    king_attacks_bb |= bb::shift_east(square);
+    king_attacks_bb |= bb::shift_west(square);
+    king_attacks_bb |= bb::shift_north_west(square);
+    king_attacks_bb |= bb::shift_north_east(square);
+    king_attacks_bb |= bb::shift_south_west(square);
+    king_attacks_bb |= bb::shift_south_east(square);
+
+    return king_attacks_bb;
+}
+
+/// @brief Construct move and add it to movelist
+void addMovesFromSquare(int from, std::uint64_t targets, MoveFlag flag,
+                        MoveList &moves) {
+
+    while (targets) {
+        const int to = bb::pop_lsb(targets);
+
+        moves.add(Move{static_cast<std::uint8_t>(from),
+                       static_cast<std::uint8_t>(to), flag});
+    }
+}
+
+} // namespace
+
 void MoveGenerator::generatePseudoLegal(
     const Position &pos, MoveList &moves,
     const chess::config::DebugConfig &debug) {
-    initAttackTables(pos, debug);
-    generatePawnMoves(pos, moves, debug);
     generateKnightMoves(pos, moves);
+    generatePawnMoves(pos, moves, debug);
 }
 
 // Generate all legal moves given a position
@@ -29,71 +85,16 @@ void generateLegal(const Position &pos, MoveList &moves) {
     throw std::runtime_error("Function not implemented");
 }
 
-void MoveGenerator::initAttackTables(const Position &pos,
-                                     const chess::config::DebugConfig &debug) {
+void MoveGenerator::initAttackTables() {
     for (int square = 0; square < 64; ++square) {
         const std::uint64_t bit_board = 1ULL << square;
 
-        if (debug.print_bitboards()) {
-            std::cout << "Current square: \n";
-            pos.print_bitboard(bit_board);
-            std::cout << "\n";
-        }
-
-        // --- Generate knight attacks
-        std::uint64_t knight_attacks_bb = 0ULL;
-
-        knight_attacks_bb |= bit_board;
-
-        knight_attacks_bb |=
-            bb::shift_left(bb::shift_up(bit_board, 2), 1) & (bb::NOT_FILE_H);
-        knight_attacks_bb |=
-            bb::shift_left(bb::shift_up(bit_board, 1), 2) & (bb::NOT_FILE_G);
-        knight_attacks_bb |=
-            bb::shift_right(bb::shift_up(bit_board, 2), 1) & (bb::NOT_FILE_A);
-        knight_attacks_bb |=
-            bb::shift_right(bb::shift_up(bit_board, 1), 2) & (bb::NOT_FILE_B);
-
-        knight_attacks_bb |=
-            bb::shift_left(bb::shift_down(bit_board, 1), 2) & (bb::NOT_FILE_G);
-        knight_attacks_bb |=
-            bb::shift_left(bb::shift_down(bit_board, 2), 1) & (bb::NOT_FILE_H);
-        knight_attacks_bb |=
-            bb::shift_right(bb::shift_down(bit_board, 1), 2) & (bb::NOT_FILE_B);
-        knight_attacks_bb |=
-            bb::shift_right(bb::shift_down(bit_board, 2), 1) & (bb::NOT_FILE_A);
-
-        // if (debug.print_bitboards()) {
-        std::cout << "Attack square [" << "MOVE#" << square << "] : \n";
-        pos.print_bitboard(knight_attacks_bb);
-        std::cout << "\n";
-        // }
-
-        // --- Generate king attacks
-        std::uint64_t king_attacks_bb = 0ULL;
-
-        king_attacks_bb |= bit_board;
-
-        king_attacks_bb |= bb::shift_north(bit_board);
-        king_attacks_bb |= bb::shift_south(bit_board);
-        king_attacks_bb |= bb::shift_east(bit_board);
-        king_attacks_bb |= bb::shift_west(bit_board);
-        king_attacks_bb |= bb::shift_north_west(bit_board);
-        king_attacks_bb |= bb::shift_north_east(bit_board);
-        king_attacks_bb |= bb::shift_south_west(bit_board);
-        king_attacks_bb |= bb::shift_south_east(bit_board);
-
-        if (debug.print_bitboards()) {
-            std::cout << "King attacks: \n";
-            pos.print_bitboard(king_attacks_bb);
-            std::cout << "\n";
-        }
-
-        // knight_attacks_bb |= bit_board <<
+        knightAttacks[square] = calculateKnightAttacks(bit_board);
+        kingAttacks[square] = calculateKingAttacks(bit_board);
     }
 }
 
-/* ============= HELPERS TO GENERATE MOVES ============= */
+/* ============= GENERATE MOVES HELPERS ============= */
 void MoveGenerator::generatePawnMoves(const Position &pos, MoveList &moves,
                                       const chess::config::DebugConfig &debug) {
 
@@ -161,27 +162,6 @@ void MoveGenerator::generatePawnMoves(const Position &pos, MoveList &moves,
                                              : (bb::shift_south_west(pawnsBB));
     std::uint64_t rightCaptures = isWhiteMove ? (bb::shift_north_east(pawnsBB))
                                               : (bb::shift_south_east(pawnsBB));
-
-    if (debug.print_bitboards()) {
-        std::cout << "Panws BB: \n";
-        pos.print_bitboard(pawnsBB);
-        // Only valid squares are ones with enemy pieces
-        std::cout << "Left captures: \n";
-        pos.print_bitboard(leftCaptures);
-        std::cout << "\n";
-
-        std::cout << "Right captures: \n";
-        pos.print_bitboard(rightCaptures);
-        std::cout << "\n";
-
-        std::cout << "Enemy pieces: \n";
-        pos.print_bitboard(enemyPiecesBB);
-        std::cout << "\n";
-
-        std::cout << "En passant bb: \n";
-        pos.print_bitboard(pos.getEnPassantSquareBB());
-    }
-
     std::uint64_t en_passant_bb = pos.getEnPassantSquareBB();
     leftCaptures &= (enemyPiecesBB | en_passant_bb);
     rightCaptures &= (enemyPiecesBB | en_passant_bb);
@@ -194,16 +174,29 @@ void MoveGenerator::generatePawnMoves(const Position &pos, MoveList &moves,
 }
 
 void MoveGenerator::generateKnightMoves(const Position &pos, MoveList &moves) {
-    const bool isWhiteMove = pos.getSideToMove() == Color::White;
+    const Color side = pos.getSideToMove();
+    const Color enemy =
+        pos.getSideToMove() == Color::White ? Color::Black : Color::White;
 
-    const std::uint64_t occupied = pos.getOccupied();
+    std::uint64_t knights = pos.getPieces(side, PieceType::Knight);
 
-    // Validates free square to move on
-    const std::uint64_t emptySquaresBB = ~occupied;
+    std::uint64_t occupied = pos.getOccupied();
+    std::uint64_t friendly_pieces = pos.getOccupied(side);
+    std::uint64_t enemy_pieces = pos.getOccupied(enemy);
 
-    const std::uint64_t knightsBB =
-        isWhiteMove ? pos.getPieces(Color::White, PieceType::Knight)
-                    : pos.getPieces(Color::Black, PieceType::Knight);
+    while (knights) {
+        int from_square = bb::pop_lsb(knights);
+
+        const std::uint64_t attacks =
+            knightAttacks[from_square] & ~friendly_pieces;
+
+        const std::uint64_t quiet_moves = attacks & ~occupied;
+        const std::uint64_t captures = attacks & enemy_pieces;
+
+        addMovesFromSquare(from_square, quiet_moves, MoveFlag::QUIET_MOVES,
+                           moves);
+        addMovesFromSquare(from_square, captures, MoveFlag::CAPTURES, moves);
+    }
 }
 
 void generateBishopMoves(const Position &pos, MoveList &moves) {

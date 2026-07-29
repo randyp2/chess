@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../core/BitBoard.hpp"
 #include "../core/Move.hpp"
 #include "../core/Position.hpp"
 #include "chess/config/DebugConfig.hpp"
@@ -22,7 +21,17 @@ struct MoveList {
 
 class MoveGenerator {
   public:
-    // Generate all pseudo-legal moves given a position
+    /**
+     * Generate all pseudo-legal moves given a positoin
+     *
+     * A pseudolegal move in chess is a move that follows the basic movement and
+     * capture rules for a specific piece, but may still be illegal because
+     * it leaves or puts the player's own king in check
+     *
+     * @param pos - Position class that owns bitboard game state
+     * @param moves - Stores all legal moves
+     * @param debug - Class for logging and debugging
+     */
     static void generatePseudoLegal(const Position &pos, MoveList &moves,
                                     const chess::config::DebugConfig &debug);
 
@@ -33,8 +42,7 @@ class MoveGenerator {
                                   const chess::config::DebugConfig &debug);
 
     // Initialize attack tables
-    static void initAttackTables(const Position &pos,
-                                 const chess::config::DebugConfig &debug);
+    static void initAttackTables();
 
   private:
     // --- Helpers for move generation

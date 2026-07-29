@@ -36,26 +36,18 @@ class Position {
      */
     Position(const std::string &);
 
-    /* =============== BASIC HELPERS =============== */
     Color getSideToMove() const { return this->side_to_move; }
 
-    /* =============== BITBOARD GETTERS =============== */
-
-    // Return bitboard with specific color and piece
     std::uint64_t getPieces(Color color, PieceType piece) const;
     std::uint64_t getPieces(PieceType color) const;
 
-    // Return occupied bitboard with specific color
     std::uint64_t getOccupied(Color color) const;
-
-    // Return occupied bitboard squares
     std::uint64_t getOccupied() const;
 
     std::uint64_t getEnPassantSquareBB() const {
         return this->en_passant_square_bb;
     }
 
-    /* =============== UI GETTERS =============== */
     /**
      * Return info about all possible pieces - 32 pieces
      *
@@ -63,10 +55,8 @@ class Position {
      */
     std::vector<PieceOnSquare> getAllPieces() const;
 
-    // --- Debugging
     void print_bitboard(std::uint64_t bb) const;
 
-    /* =============== LOGICAL GAME MOVES =============== */
     // Move one piece square to square
     void makeMove(const Move &move, const chess::config::DebugConfig &debugger);
     bool findPieceAt(int squareIdx, Color &outColor, PieceType &outPiece) const;
@@ -89,7 +79,6 @@ class Position {
     //  This square is removed every other turn
     std::uint64_t en_passant_square_bb = 0ULL;
 
-    // --- Helpers
     void clear();
     void parse_fen(const std::string &fen);
 };

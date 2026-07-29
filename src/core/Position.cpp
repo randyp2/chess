@@ -3,7 +3,6 @@
 #include "chess/core/Piece.hpp"
 
 #include <cstdint>
-#include <cwctype>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -45,7 +44,6 @@ void printDebug(const std::uint64_t bb, int idx) {
 
 namespace chess::core {
 
-/* ======================= ANONYMOUS NAMESPACE ======================= */
 // Anonymous namespace: Used for private helper functions local to this file
 namespace {
 
@@ -59,9 +57,7 @@ constexpr std::size_t idx(PieceType p) { return static_cast<std::size_t>(p); }
 constexpr int square_index(int rank, int file) { return rank * 8 + (7 - file); }
 
 } // namespace
-/* ======================= ANONYMOUS NAMESPACE ======================= */
 
-/* ========= CONSTRUCTORS =========*/
 Position::Position() {
     parse_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w");
     // parse_fen("pppppppp/pppppppp/8/8/8/8/8/8 w");
@@ -69,7 +65,6 @@ Position::Position() {
 
 Position::Position(const std::string &fen_string) { parse_fen(fen_string); }
 
-/* ========= GETTERS =========*/
 std::uint64_t Position::getPieces(Color color, PieceType piece) const {
     return bit_boards[idx(color)][idx(piece)];
 }
