@@ -1,9 +1,10 @@
 #pragma once
 
+#include "../core/BitBoard.hpp"
 #include "../core/Move.hpp"
 #include "../core/Position.hpp"
 #include "chess/config/DebugConfig.hpp"
-#include <cstdint>
+#include <cstddef>
 
 namespace chess::core {
 
@@ -53,24 +54,22 @@ class MoveGenerator {
     static void generateKingMoves(const Position &pos, MoveList &moves);
 
     // --- Sliding attacks
-    static std::uint64_t bishopAttacks(std::uint64_t bishops,
-                                       std::uint64_t occupied);
-    static std::uint64_t rookAttacks(std::uint64_t rooks,
-                                     std::uint64_t occupied);
+    static Bitboard bishopAttacks(Bitboard bishops, Bitboard occupied);
+    static Bitboard rookAttacks(Bitboard rooks, Bitboard occupied);
 
     static bool isInCheck(const Position &pos);
 
     // --- Helpers to parse and add moves
-    static void parse_move(std::uint64_t bit_board, MoveList &moves, int offset,
+    static void parse_move(Bitboard bit_board, MoveList &moves, int offset,
                            MoveFlag flag);
 
-    static void parse_pawn_capture(std::uint64_t bit_board, MoveList &moves,
-                                   int offset, std::uint64_t en_passant_bb);
+    static void parse_pawn_capture(Bitboard bit_board, MoveList &moves,
+                                   int offset, Bitboard en_passant_bb);
 
     // --- Attacking moves
-    static std::uint64_t
+    static Bitboard
         knightAttacks[64]; // Possible knight attacks from each position
-    static std::uint64_t
+    static Bitboard
         kingAttacks[64]; // Possible king attacks from each position
 };
 } // namespace chess::core

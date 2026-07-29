@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cstdint> // For fix integer bits
-
 /**
  * std::array has no overhead
  *  - has .size() field -> returns constant O(1)
@@ -13,6 +11,7 @@
 #include <vector>
 
 #include "../config/DebugConfig.hpp"
+#include "../core/BitBoard.hpp"
 #include "../core/Move.hpp"
 #include "../core/Piece.hpp"
 
@@ -38,13 +37,13 @@ class Position {
 
     Color getSideToMove() const { return this->side_to_move; }
 
-    std::uint64_t getPieces(Color color, PieceType piece) const;
-    std::uint64_t getPieces(PieceType color) const;
+    Bitboard getPieces(Color color, PieceType piece) const;
+    Bitboard getPieces(PieceType color) const;
 
-    std::uint64_t getOccupied(Color color) const;
-    std::uint64_t getOccupied() const;
+    Bitboard getOccupied(Color color) const;
+    Bitboard getOccupied() const;
 
-    std::uint64_t getEnPassantSquareBB() const {
+    Bitboard getEnPassantSquareBB() const {
         return this->en_passant_square_bb;
     }
 
@@ -55,7 +54,7 @@ class Position {
      */
     std::vector<PieceOnSquare> getAllPieces() const;
 
-    void print_bitboard(std::uint64_t bb) const;
+    void print_bitboard(Bitboard bb) const;
 
     // Move one piece square to square
     void makeMove(const Move &move, const chess::config::DebugConfig &debugger);
@@ -67,7 +66,7 @@ class Position {
     // White: King, Queen, Bishop, Knight, Rook, Pawn
     // Black: King, Queen, Bishop, Knight, Rook, Pawn
     std::array<
-        std::array<std::uint64_t, static_cast<std::size_t>(PieceType::Count)>,
+        std::array<Bitboard, static_cast<std::size_t>(PieceType::Count)>,
         static_cast<std::size_t>(Color::Count)>
         bit_boards{};
 
@@ -77,7 +76,7 @@ class Position {
     // If a pawn moves up twice then the current square it sits on is the ep
     // square
     //  This square is removed every other turn
-    std::uint64_t en_passant_square_bb = 0ULL;
+    Bitboard en_passant_square_bb = 0ULL;
 
     void clear();
     void parse_fen(const std::string &fen);

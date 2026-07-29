@@ -2,43 +2,46 @@
 
 #include <cassert>
 #include <cstdint>
-namespace chess::core::BitBoard {
+
+namespace chess::core {
 
 // Type alias for better readabilty
-using BitBoard = std::uint64_t;
+using Bitboard = std::uint64_t;
+
+namespace bb {
 
 /* ================== FILE MASKS ================== */
 
 /**
  * 10000000
  */
-constexpr BitBoard FILE_A = 0x8080808080808080ULL;
-constexpr BitBoard FILE_B = FILE_A >> 1;
-constexpr BitBoard FILE_C = FILE_B >> 1;
-constexpr BitBoard FILE_D = FILE_C >> 1;
-constexpr BitBoard FILE_E = FILE_D >> 1;
-constexpr BitBoard FILE_F = FILE_E >> 1;
-constexpr BitBoard FILE_G = FILE_F >> 1;
-constexpr BitBoard FILE_H = FILE_G >> 1;
+constexpr Bitboard FILE_A = 0x8080808080808080ULL;
+constexpr Bitboard FILE_B = FILE_A >> 1;
+constexpr Bitboard FILE_C = FILE_B >> 1;
+constexpr Bitboard FILE_D = FILE_C >> 1;
+constexpr Bitboard FILE_E = FILE_D >> 1;
+constexpr Bitboard FILE_F = FILE_E >> 1;
+constexpr Bitboard FILE_G = FILE_F >> 1;
+constexpr Bitboard FILE_H = FILE_G >> 1;
 
 // To prevent wrapping
-constexpr BitBoard NOT_FILE_A = ~FILE_A;
-constexpr BitBoard NOT_FILE_B = ~FILE_B;
-constexpr BitBoard NOT_FILE_G = ~FILE_G;
-constexpr BitBoard NOT_FILE_H = ~FILE_H;
+constexpr Bitboard NOT_FILE_A = ~FILE_A;
+constexpr Bitboard NOT_FILE_B = ~FILE_B;
+constexpr Bitboard NOT_FILE_G = ~FILE_G;
+constexpr Bitboard NOT_FILE_H = ~FILE_H;
 
 /* ================== RANK MASKS ================== */
-constexpr BitBoard RANK_1 = 0x00000000000000FFULL;
-constexpr BitBoard RANK_2 = RANK_1 << 8;
-constexpr BitBoard RANK_3 = RANK_2 << 8;
-constexpr BitBoard RANK_4 = RANK_3 << 8;
-constexpr BitBoard RANK_5 = RANK_4 << 8;
-constexpr BitBoard RANK_6 = RANK_5 << 8;
-constexpr BitBoard RANK_7 = RANK_6 << 8;
-constexpr BitBoard RANK_8 = RANK_7 << 8;
+constexpr Bitboard RANK_1 = 0x00000000000000FFULL;
+constexpr Bitboard RANK_2 = RANK_1 << 8;
+constexpr Bitboard RANK_3 = RANK_2 << 8;
+constexpr Bitboard RANK_4 = RANK_3 << 8;
+constexpr Bitboard RANK_5 = RANK_4 << 8;
+constexpr Bitboard RANK_6 = RANK_5 << 8;
+constexpr Bitboard RANK_7 = RANK_6 << 8;
+constexpr Bitboard RANK_8 = RANK_7 << 8;
 
 // Return the index of the LSB and pop it
-inline int pop_lsb(BitBoard &bb) noexcept {
+inline int pop_lsb(Bitboard &bb) noexcept {
     assert(bb != 0);
     int idx = __builtin_ctzll(bb);
     bb &= bb - 1;
@@ -46,7 +49,7 @@ inline int pop_lsb(BitBoard &bb) noexcept {
 }
 
 // Return index of lsb w/o popping
-inline int lsb(BitBoard bb) noexcept {
+inline int lsb(Bitboard bb) noexcept {
     assert(bb != 0);
     return __builtin_ctzll(bb);
 }
@@ -55,36 +58,37 @@ inline int lsb(BitBoard bb) noexcept {
 // These are in perspective of white pieces
 //  - White's south is black's north
 //  - White's east is black's west
-inline BitBoard shift_north(BitBoard bb) noexcept { return bb << 8; }
-inline BitBoard shift_south(BitBoard bb) noexcept { return bb >> 8; }
-inline BitBoard shift_east(BitBoard bb) noexcept {
+inline Bitboard shift_north(Bitboard bb) noexcept { return bb << 8; }
+inline Bitboard shift_south(Bitboard bb) noexcept { return bb >> 8; }
+inline Bitboard shift_east(Bitboard bb) noexcept {
     return (bb & NOT_FILE_H) >> 1;
 }
-inline BitBoard shift_west(BitBoard bb) noexcept {
+inline Bitboard shift_west(Bitboard bb) noexcept {
     return (bb & NOT_FILE_A) << 1;
 }
-inline BitBoard shift_north_east(BitBoard bb) noexcept {
+inline Bitboard shift_north_east(Bitboard bb) noexcept {
     return shift_north(shift_east(bb));
 }
-inline BitBoard shift_north_west(BitBoard bb) noexcept {
+inline Bitboard shift_north_west(Bitboard bb) noexcept {
     return shift_north(shift_west(bb));
 }
-inline BitBoard shift_south_east(BitBoard bb) noexcept {
+inline Bitboard shift_south_east(Bitboard bb) noexcept {
     return shift_south(shift_east(bb));
 }
-inline BitBoard shift_south_west(BitBoard bb) noexcept {
+inline Bitboard shift_south_west(Bitboard bb) noexcept {
     return shift_south(shift_west(bb));
 }
 
-inline BitBoard shift_left(BitBoard bb, int val) noexcept { return bb << val; }
+inline Bitboard shift_left(Bitboard bb, int val) noexcept { return bb << val; }
 
-inline BitBoard shift_right(BitBoard bb, int val) noexcept { return bb >> val; }
+inline Bitboard shift_right(Bitboard bb, int val) noexcept { return bb >> val; }
 
-inline BitBoard shift_up(BitBoard bb, int val) noexcept {
+inline Bitboard shift_up(Bitboard bb, int val) noexcept {
     return bb << 8 * val;
 }
-inline BitBoard shift_down(BitBoard bb, int val) noexcept {
+inline Bitboard shift_down(Bitboard bb, int val) noexcept {
     return bb >> 8 * val;
 }
 
-} // namespace chess::core::BitBoard
+} // namespace bb
+} // namespace chess::core
