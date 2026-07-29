@@ -103,6 +103,7 @@ void MoveGenerator::generatePseudoLegal(
     const chess::config::DebugConfig &debug) {
     generateKnightMoves(pos, moves);
     generatePawnMoves(pos, moves, debug);
+    generateKingMoves(pos, moves);
 }
 
 // Generate all legal moves given a position
@@ -143,18 +144,16 @@ void MoveGenerator::generatePawnMoves(const Position &pos, MoveList &moves,
     // Validates free square to move on
     const Bitboard emptySquaresBB = ~occupied;
 
-    const Bitboard pawnsBB =
-        isWhiteMove ? pos.getPieces(Color::White, PieceType::Pawn)
-                    : pos.getPieces(Color::Black, PieceType::Pawn);
+    const Bitboard pawnsBB = isWhiteMove
+                                 ? pos.getPieces(Color::White, PieceType::Pawn)
+                                 : pos.getPieces(Color::Black, PieceType::Pawn);
 
-    const Bitboard enemyPiecesBB = isWhiteMove
-                                       ? pos.getOccupied(Color::Black)
-                                       : pos.getOccupied(Color::White);
+    const Bitboard enemyPiecesBB = isWhiteMove ? pos.getOccupied(Color::Black)
+                                               : pos.getOccupied(Color::White);
 
     // Start rank and promotion rank
     const Bitboard startRankMask = isWhiteMove ? bb::RANK_2 : bb::RANK_7;
-    const Bitboard promotionRankMask =
-        isWhiteMove ? bb::RANK_8 : bb::RANK_1;
+    const Bitboard promotionRankMask = isWhiteMove ? bb::RANK_8 : bb::RANK_1;
 
     // --- Generate single pawn pushes ---
     Bitboard singlePawnPush =
@@ -164,7 +163,8 @@ void MoveGenerator::generatePawnMoves(const Position &pos, MoveList &moves,
     Bitboard quietPush = singlePawnPush & ~promotionRankMask;
     Bitboard promotionPush = singlePawnPush & promotionRankMask;
 
-    addPawnMovesFromTargets(quietPush, pushOffset, MoveFlag::QUIET_MOVES, moves);
+    addPawnMovesFromTargets(quietPush, pushOffset, MoveFlag::QUIET_MOVES,
+                            moves);
     addPawnMovesFromTargets(promotionPush, pushOffset, MoveFlag::QUEEN_PROM,
                             moves);
 
@@ -198,7 +198,8 @@ void MoveGenerator::generatePawnMoves(const Position &pos, MoveList &moves,
     int rightOffset = isWhiteMove ? captureOffsetNE : captureOffsetSE;
 
     addPawnCapturesFromTargets(leftCaptures, leftOffset, en_passant_bb, moves);
-    addPawnCapturesFromTargets(rightCaptures, rightOffset, en_passant_bb, moves);
+    addPawnCapturesFromTargets(rightCaptures, rightOffset, en_passant_bb,
+                               moves);
 }
 
 void MoveGenerator::generateKnightMoves(const Position &pos, MoveList &moves) {
@@ -213,10 +214,9 @@ void MoveGenerator::generateKnightMoves(const Position &pos, MoveList &moves) {
     Bitboard enemy_pieces = pos.getOccupied(enemy);
 
     while (knights) {
-        int from_square = bb::pop_lsb(knights);
+        const int from_square = bb::pop_lsb(knights);
 
-        const Bitboard attacks =
-            knightAttacks[from_square] & ~friendly_pieces;
+        const Bitboard attacks = knightAttacks[from_square] & ~friendly_pieces;
 
         const Bitboard quiet_moves = attacks & ~occupied;
         const Bitboard captures = attacks & enemy_pieces;
@@ -242,9 +242,28 @@ void generateQueenMoves(const Position &pos, MoveList &moves) {
     throw std::runtime_error("Function not implemented");
 }
 
-void generateKingMoves(const Position &pos, MoveList &moves) {
+void MoveGenerator::generateKingMoves(const Position &pos, MoveList &moves) {
+    const Color side = pos.getSideToMove();
+    const Color enemy = side == Color::White ? Color::Black : Color::White;
 
-    throw std::runtime_error("Function not implemented");
+    Bitboard kings = pos.getPieces(side, PieceType::King);
+
+    Bitboard occupied = pos.getOccupied();
+    Bitboard friendly_pieces = pos.getOccupied(side);
+    Bitboard enemy_pieces = pos.getOccupied(enemy);
+
+    while (kings) {
+        const int from_square = bb::pop_lsb(kings);
+
+        const Bitboard attacks = kingAttacks[from_square] & ~friendly_pieces;
+
+        const Bitboard quiet_moves = attacks & ~occupied;
+        const Bitboard captures = attacks & enemy_pieces;
+
+        addMovesFromSquare(from_square, quiet_moves, MoveFlag::QUIET_MOVES,
+                           moves);
+        addMovesFromSquare(from_square, captures, MoveFlag::CAPTURES, moves);
+    }
 }
 
 // --- Sliding attacks
