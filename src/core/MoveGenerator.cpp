@@ -69,6 +69,33 @@ void addMovesFromSquare(int from, Bitboard targets, MoveFlag flag,
     }
 }
 
+void addPawnMovesFromTargets(Bitboard targets, int offset, MoveFlag flag,
+                             MoveList &moves) {
+    while (targets) {
+        const int targetSquare = bb::pop_lsb(targets);
+        const int startSquare = targetSquare - offset;
+
+        moves.add(Move{static_cast<std::uint8_t>(startSquare),
+                       static_cast<std::uint8_t>(targetSquare), flag});
+    }
+}
+
+void addPawnCapturesFromTargets(Bitboard targets, int offset,
+                                Bitboard enPassantTarget, MoveList &moves) {
+    while (targets) {
+        const int targetSquare = bb::pop_lsb(targets);
+        const int startSquare = targetSquare - offset;
+
+        const MoveFlag flag =
+            enPassantTarget && targetSquare == bb::lsb(enPassantTarget)
+                ? MoveFlag::EP_CAPTURE
+                : MoveFlag::CAPTURES;
+
+        moves.add(Move{static_cast<std::uint8_t>(startSquare),
+                       static_cast<std::uint8_t>(targetSquare), flag});
+    }
+}
+
 } // namespace
 
 void MoveGenerator::generatePseudoLegal(
@@ -137,8 +164,9 @@ void MoveGenerator::generatePawnMoves(const Position &pos, MoveList &moves,
     Bitboard quietPush = singlePawnPush & ~promotionRankMask;
     Bitboard promotionPush = singlePawnPush & promotionRankMask;
 
-    parse_move(quietPush, moves, pushOffset, MoveFlag::QUIET_MOVES);
-    parse_move(promotionPush, moves, pushOffset, MoveFlag::QUEEN_PROM);
+    addPawnMovesFromTargets(quietPush, pushOffset, MoveFlag::QUIET_MOVES, moves);
+    addPawnMovesFromTargets(promotionPush, pushOffset, MoveFlag::QUEEN_PROM,
+                            moves);
 
     // --- Generate double pawn pushes ---
     Bitboard nonMovedPawns = pawnsBB & startRankMask;
@@ -153,7 +181,8 @@ void MoveGenerator::generatePawnMoves(const Position &pos, MoveList &moves,
                                   : (bb::shift_south(singlePushFromStart));
     doublePawnPush &= emptySquaresBB;
 
-    parse_move(doublePawnPush, moves, pushOffset * 2, MoveFlag::DOUBLE_PP);
+    addPawnMovesFromTargets(doublePawnPush, pushOffset * 2, MoveFlag::DOUBLE_PP,
+                            moves);
 
     // --- Generate diagonal captures ---
     // Create bitboard for left and right captures
@@ -168,8 +197,8 @@ void MoveGenerator::generatePawnMoves(const Position &pos, MoveList &moves,
     int leftOffset = isWhiteMove ? captureOffsetNW : captureOffsetSW;
     int rightOffset = isWhiteMove ? captureOffsetNE : captureOffsetSE;
 
-    parse_pawn_capture(leftCaptures, moves, leftOffset, en_passant_bb);
-    parse_pawn_capture(rightCaptures, moves, rightOffset, en_passant_bb);
+    addPawnCapturesFromTargets(leftCaptures, leftOffset, en_passant_bb, moves);
+    addPawnCapturesFromTargets(rightCaptures, rightOffset, en_passant_bb, moves);
 }
 
 void MoveGenerator::generateKnightMoves(const Position &pos, MoveList &moves) {
@@ -227,33 +256,6 @@ Bitboard bishopAttacks(Bitboard bishops, Bitboard occupied) {
 Bitboard rookAttacks(Bitboard rooks, Bitboard occupied) {
 
     throw std::runtime_error("Function not implemented");
-}
-
-void MoveGenerator::parse_move(Bitboard bit_board, MoveList &moves,
-                               int offset, MoveFlag flag) {
-    // Add quiet moves to MoveList
-    while (bit_board) {
-        int targetSquare = bb::pop_lsb(bit_board);
-        int startSquare = targetSquare - offset;
-
-        moves.add(Move(static_cast<std::uint8_t>(startSquare),
-                       static_cast<std::uint8_t>(targetSquare), flag));
-    }
-}
-
-void MoveGenerator::parse_pawn_capture(Bitboard bit_board, MoveList &moves,
-                                       int offset, Bitboard en_passant_bb) {
-    while (bit_board) {
-        int targetSquare = bb::pop_lsb(bit_board);
-        int startSquare = targetSquare - offset;
-
-        MoveFlag flag =
-            en_passant_bb && (targetSquare == bb::lsb(en_passant_bb))
-                ? MoveFlag::EP_CAPTURE
-                : MoveFlag::CAPTURES;
-        moves.add(Move(static_cast<std::uint8_t>(startSquare),
-                       static_cast<std::uint8_t>(targetSquare), flag));
-    }
 }
 
 } // namespace chess::core

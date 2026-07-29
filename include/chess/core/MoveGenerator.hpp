@@ -59,13 +59,6 @@ class MoveGenerator {
 
     static bool isInCheck(const Position &pos);
 
-    // --- Helpers to parse and add moves
-    static void parse_move(Bitboard bit_board, MoveList &moves, int offset,
-                           MoveFlag flag);
-
-    static void parse_pawn_capture(Bitboard bit_board, MoveList &moves,
-                                   int offset, Bitboard en_passant_bb);
-
     // --- Attacking moves
     static Bitboard
         knightAttacks[64]; // Possible knight attacks from each position
