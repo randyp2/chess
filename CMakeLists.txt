@@ -17,6 +17,7 @@ add_executable(chess
     src/core/Position.cpp
     src/ui/input_controller.cpp
     src/config/DebugConfig.cpp
+    src/core/Attacks.cpp
     src/core/MoveGenerator.cpp
 )
 

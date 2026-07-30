@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../core/BitBoard.hpp"
 #include "../core/Move.hpp"
 #include "../core/Position.hpp"
 #include "chess/config/DebugConfig.hpp"
@@ -42,9 +41,6 @@ class MoveGenerator {
     static void generatePawnMoves(const Position &pos, MoveList &moves,
                                   const chess::config::DebugConfig &debug);
 
-    // Initialize attack tables
-    static void initAttackTables();
-
   private:
     // --- Helpers for move generation
     static void generateKnightMoves(const Position &pos, MoveList &moves);
@@ -53,16 +49,6 @@ class MoveGenerator {
     static void generateQueenMoves(const Position &pos, MoveList &moves);
     static void generateKingMoves(const Position &pos, MoveList &moves);
 
-    // --- Sliding attacks
-    static Bitboard bishopAttacks(Bitboard bishops, Bitboard occupied);
-    static Bitboard rookAttacks(Bitboard rooks, Bitboard occupied);
-
     static bool isInCheck(const Position &pos);
-
-    // --- Attacking moves
-    static Bitboard
-        knightAttacks[64]; // Possible knight attacks from each position
-    static Bitboard
-        kingAttacks[64]; // Possible king attacks from each position
 };
 } // namespace chess::core

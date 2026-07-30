@@ -1,5 +1,6 @@
 #include "../../include/chess/core/MoveGenerator.hpp"
 #include "chess/config/DebugConfig.hpp"
+#include "chess/core/Attacks.hpp"
 #include "chess/core/BitBoard.hpp"
 #include "chess/core/Move.hpp"
 #include "chess/core/Piece.hpp"
@@ -9,53 +10,7 @@
 
 namespace chess::core {
 
-Bitboard MoveGenerator::knightAttacks[64]{};
-Bitboard MoveGenerator::kingAttacks[64]{};
-
 namespace {
-
-/// @brief Calculate all possible knight moves given the knights current pos
-Bitboard calculateKnightAttacks(const Bitboard square) {
-    Bitboard knight_attacks_bb = 0ULL;
-
-    knight_attacks_bb |=
-        bb::shift_left(bb::shift_up(square, 2), 1) & (bb::NOT_FILE_H);
-    knight_attacks_bb |=
-        bb::shift_right(bb::shift_up(square, 2), 1) & (bb::NOT_FILE_A);
-
-    knight_attacks_bb |= bb::shift_left(bb::shift_up(square, 1), 2) &
-                         (bb::NOT_FILE_G & bb::NOT_FILE_H);
-    knight_attacks_bb |= bb::shift_right(bb::shift_up(square, 1), 2) &
-                         (bb::NOT_FILE_A & bb::NOT_FILE_B);
-
-    knight_attacks_bb |=
-        bb::shift_right(bb::shift_down(square, 2), 1) & (bb::NOT_FILE_A);
-    knight_attacks_bb |=
-        bb::shift_left(bb::shift_down(square, 2), 1) & (bb::NOT_FILE_H);
-
-    knight_attacks_bb |= bb::shift_left(bb::shift_down(square, 1), 2) &
-                         (bb::NOT_FILE_G & bb::NOT_FILE_H);
-    knight_attacks_bb |= bb::shift_right(bb::shift_down(square, 1), 2) &
-                         (bb::NOT_FILE_B & bb::NOT_FILE_A);
-
-    return knight_attacks_bb;
-}
-
-/// @brief Calcualte all possible moves of a king from starting square
-Bitboard calculateKingAttacks(const Bitboard square) {
-    Bitboard king_attacks_bb = 0ULL;
-
-    king_attacks_bb |= bb::shift_north(square);
-    king_attacks_bb |= bb::shift_south(square);
-    king_attacks_bb |= bb::shift_east(square);
-    king_attacks_bb |= bb::shift_west(square);
-    king_attacks_bb |= bb::shift_north_west(square);
-    king_attacks_bb |= bb::shift_north_east(square);
-    king_attacks_bb |= bb::shift_south_west(square);
-    king_attacks_bb |= bb::shift_south_east(square);
-
-    return king_attacks_bb;
-}
 
 /// @brief Construct move and add it to movelist
 void addMovesFromSquare(int from, Bitboard targets, MoveFlag flag,
@@ -96,6 +51,29 @@ void addPawnCapturesFromTargets(Bitboard targets, int offset,
     }
 }
 
+using SlidingAttackFunction = Bitboard (*)(int square, Bitboard occupied);
+
+void addSlidingPieceMoves(const Position &pos, PieceType pieceType,
+                          SlidingAttackFunction attacksFrom, MoveList &moves) {
+    const Color side = pos.getSideToMove();
+    const Color enemy = side == Color::White ? Color::Black : Color::White;
+
+    Bitboard pieces = pos.getPieces(side, pieceType);
+    const Bitboard occupied = pos.getOccupied();
+    const Bitboard friendlyPieces = pos.getOccupied(side);
+    const Bitboard enemyPieces = pos.getOccupied(enemy);
+
+    while (pieces) {
+        const int from = bb::pop_lsb(pieces);
+        const Bitboard targets = attacksFrom(from, occupied) & ~friendlyPieces;
+
+        addMovesFromSquare(from, targets & ~occupied, MoveFlag::QUIET_MOVES,
+                           moves);
+        addMovesFromSquare(from, targets & enemyPieces, MoveFlag::CAPTURES,
+                           moves);
+    }
+}
+
 } // namespace
 
 void MoveGenerator::generatePseudoLegal(
@@ -103,27 +81,18 @@ void MoveGenerator::generatePseudoLegal(
     const chess::config::DebugConfig &debug) {
     generateKnightMoves(pos, moves);
     generatePawnMoves(pos, moves, debug);
+    // TODO: Enable sliding-piece generation after its attacks are implemented.
     generateKingMoves(pos, moves);
 }
 
 // Generate all legal moves given a position
-void generateLegal(const Position &pos, MoveList &moves) {
-
+void MoveGenerator::generateLegal(const Position &, MoveList &) {
     throw std::runtime_error("Function not implemented");
-}
-
-void MoveGenerator::initAttackTables() {
-    for (int square = 0; square < 64; ++square) {
-        const Bitboard bit_board = 1ULL << square;
-
-        knightAttacks[square] = calculateKnightAttacks(bit_board);
-        kingAttacks[square] = calculateKingAttacks(bit_board);
-    }
 }
 
 /* ============= GENERATE MOVES HELPERS ============= */
 void MoveGenerator::generatePawnMoves(const Position &pos, MoveList &moves,
-                                      const chess::config::DebugConfig &debug) {
+                                      const chess::config::DebugConfig &) {
 
     const bool isWhiteMove = pos.getSideToMove() == Color::White;
 
@@ -209,14 +178,15 @@ void MoveGenerator::generateKnightMoves(const Position &pos, MoveList &moves) {
 
     Bitboard knights = pos.getPieces(side, PieceType::Knight);
 
-    Bitboard occupied = pos.getOccupied();
-    Bitboard friendly_pieces = pos.getOccupied(side);
-    Bitboard enemy_pieces = pos.getOccupied(enemy);
+    const Bitboard occupied = pos.getOccupied();
+    const Bitboard friendly_pieces = pos.getOccupied(side);
+    const Bitboard enemy_pieces = pos.getOccupied(enemy);
 
     while (knights) {
         const int from_square = bb::pop_lsb(knights);
 
-        const Bitboard attacks = knightAttacks[from_square] & ~friendly_pieces;
+        const Bitboard attacks =
+            attacks::knight(from_square) & ~friendly_pieces;
 
         const Bitboard quiet_moves = attacks & ~occupied;
         const Bitboard captures = attacks & enemy_pieces;
@@ -227,19 +197,16 @@ void MoveGenerator::generateKnightMoves(const Position &pos, MoveList &moves) {
     }
 }
 
-void generateBishopMoves(const Position &pos, MoveList &moves) {
-
-    throw std::runtime_error("Function not implemented");
+void MoveGenerator::generateBishopMoves(const Position &pos, MoveList &moves) {
+    addSlidingPieceMoves(pos, PieceType::Bishop, attacks::bishop, moves);
 }
 
-void generateRookMoves(const Position &pos, MoveList &moves) {
-
-    throw std::runtime_error("Function not implemented");
+void MoveGenerator::generateRookMoves(const Position &pos, MoveList &moves) {
+    addSlidingPieceMoves(pos, PieceType::Rook, attacks::rook, moves);
 }
 
-void generateQueenMoves(const Position &pos, MoveList &moves) {
-
-    throw std::runtime_error("Function not implemented");
+void MoveGenerator::generateQueenMoves(const Position &pos, MoveList &moves) {
+    addSlidingPieceMoves(pos, PieceType::Queen, attacks::queen, moves);
 }
 
 void MoveGenerator::generateKingMoves(const Position &pos, MoveList &moves) {
@@ -248,14 +215,14 @@ void MoveGenerator::generateKingMoves(const Position &pos, MoveList &moves) {
 
     Bitboard kings = pos.getPieces(side, PieceType::King);
 
-    Bitboard occupied = pos.getOccupied();
-    Bitboard friendly_pieces = pos.getOccupied(side);
-    Bitboard enemy_pieces = pos.getOccupied(enemy);
+    const Bitboard occupied = pos.getOccupied();
+    const Bitboard friendly_pieces = pos.getOccupied(side);
+    const Bitboard enemy_pieces = pos.getOccupied(enemy);
 
     while (kings) {
         const int from_square = bb::pop_lsb(kings);
 
-        const Bitboard attacks = kingAttacks[from_square] & ~friendly_pieces;
+        const Bitboard attacks = attacks::king(from_square) & ~friendly_pieces;
 
         const Bitboard quiet_moves = attacks & ~occupied;
         const Bitboard captures = attacks & enemy_pieces;
@@ -264,17 +231,6 @@ void MoveGenerator::generateKingMoves(const Position &pos, MoveList &moves) {
                            moves);
         addMovesFromSquare(from_square, captures, MoveFlag::CAPTURES, moves);
     }
-}
-
-// --- Sliding attacks
-Bitboard bishopAttacks(Bitboard bishops, Bitboard occupied) {
-
-    throw std::runtime_error("Function not implemented");
-}
-
-Bitboard rookAttacks(Bitboard rooks, Bitboard occupied) {
-
-    throw std::runtime_error("Function not implemented");
 }
 
 } // namespace chess::core

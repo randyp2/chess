@@ -7,6 +7,7 @@
 #include "../include/chess/core/Position.hpp"
 #include "../include/chess/ui/board_view.hpp"
 #include "../include/chess/ui/input_controller.hpp"
+#include "chess/core/Attacks.hpp"
 #include "chess/core/MoveGenerator.hpp"
 #include <iostream>
 
@@ -47,7 +48,7 @@ int main(int argc, char **argv) {
     chess::ui::BoardView boardView({80.0f, 80.0f}, // top-left corner of board
                                    squareSize);
     chess::core::Position position;
-    chess::core::MoveGenerator::initAttackTables();
+    chess::core::attacks::initialize();
 
     position.print_bitboard(position.getPieces(chess::core::PieceType::Pawn));
 
