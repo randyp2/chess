@@ -51,29 +51,6 @@ void addPawnCapturesFromTargets(Bitboard targets, int offset,
     }
 }
 
-using SlidingAttackFunction = Bitboard (*)(int square, Bitboard occupied);
-
-void addSlidingPieceMoves(const Position &pos, PieceType pieceType,
-                          SlidingAttackFunction attacksFrom, MoveList &moves) {
-    const Color side = pos.getSideToMove();
-    const Color enemy = side == Color::White ? Color::Black : Color::White;
-
-    Bitboard pieces = pos.getPieces(side, pieceType);
-    const Bitboard occupied = pos.getOccupied();
-    const Bitboard friendlyPieces = pos.getOccupied(side);
-    const Bitboard enemyPieces = pos.getOccupied(enemy);
-
-    while (pieces) {
-        const int from = bb::pop_lsb(pieces);
-        const Bitboard targets = attacksFrom(from, occupied) & ~friendlyPieces;
-
-        addMovesFromSquare(from, targets & ~occupied, MoveFlag::QUIET_MOVES,
-                           moves);
-        addMovesFromSquare(from, targets & enemyPieces, MoveFlag::CAPTURES,
-                           moves);
-    }
-}
-
 } // namespace
 
 void MoveGenerator::generatePseudoLegal(
@@ -195,18 +172,6 @@ void MoveGenerator::generateKnightMoves(const Position &pos, MoveList &moves) {
                            moves);
         addMovesFromSquare(from_square, captures, MoveFlag::CAPTURES, moves);
     }
-}
-
-void MoveGenerator::generateBishopMoves(const Position &pos, MoveList &moves) {
-    addSlidingPieceMoves(pos, PieceType::Bishop, attacks::bishop, moves);
-}
-
-void MoveGenerator::generateRookMoves(const Position &pos, MoveList &moves) {
-    addSlidingPieceMoves(pos, PieceType::Rook, attacks::rook, moves);
-}
-
-void MoveGenerator::generateQueenMoves(const Position &pos, MoveList &moves) {
-    addSlidingPieceMoves(pos, PieceType::Queen, attacks::queen, moves);
 }
 
 void MoveGenerator::generateKingMoves(const Position &pos, MoveList &moves) {
