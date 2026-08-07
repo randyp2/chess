@@ -59,6 +59,7 @@ inline Bitboard traceSliderRays(int square, Bitboard blockers, bool rook,
         // Loop in current direction
         while (onBoard(rank, file)) {
 
+            // Exclude the edge
             if (excludeEdge && !onBoard(rank + dir.rank, file + dir.file))
                 break;
 
