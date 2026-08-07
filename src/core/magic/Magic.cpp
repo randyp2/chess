@@ -31,7 +31,7 @@ void buildEntry(Entry &entry, int square, bool rook, Bitboard magic) {
     entry.shift = 64 - relevant_bits;
 
     // 2^n gives number of unique blocker positions
-    const std::size_t permutations = 1 << relevant_bits;
+    const std::size_t permutations = 1ULL << relevant_bits;
     entry.attacks.assign(permutations, 0ULL);
 
     Bitboard blockers = 0ULL;
