@@ -13,7 +13,7 @@
 
 namespace chess::ui {
 
-/* ========= CONSTRUCTORS =========*/
+/*l ========= CONSTRUCTORS =========*/
 BoardView::BoardView(sf::Vector2f topLeft, float squareSizePx)
     : topLeft(topLeft), squareSizePx(squareSizePx) {
 
@@ -28,6 +28,7 @@ BoardView::BoardView(sf::Vector2f topLeft, float squareSizePx)
 void BoardView::drawRankNotation(sf::RenderTarget &target, sf::Text text,
                                  int rank, int file) const {
 
+    text.setCharacterSize(16);
     text.setString(std::to_string(8 - rank));
 
     // Measure text bound
@@ -38,8 +39,8 @@ void BoardView::drawRankNotation(sf::RenderTarget &target, sf::Text text,
                    bounds.top + bounds.height / 2);
 
     // Find center of square vertically
-    float centerY = (topLeft.y + rank * squareSizePx) + (squareSizePx / 2.f);
-    float centerX = (topLeft.x + file * squareSizePx) - (squareSizePx / 2.f);
+    float centerY = (topLeft.y + rank * squareSizePx) + (bounds.height / 2);
+    float centerX = (topLeft.x + file * squareSizePx) + (bounds.width / 2);
 
     text.setPosition(centerX, centerY);
 
@@ -49,6 +50,7 @@ void BoardView::drawRankNotation(sf::RenderTarget &target, sf::Text text,
 void BoardView::drawFileNotation(sf::RenderTarget &target, sf::Text text,
                                  int rank, int file) const {
 
+    text.setCharacterSize(16);
     const char files[] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'};
 
     std::string temp(1, files[file]);
@@ -62,9 +64,10 @@ void BoardView::drawFileNotation(sf::RenderTarget &target, sf::Text text,
                    bounds.top + bounds.height / 2);
 
     // Find center of square vertically
-    float centerY =
-        (topLeft.y + rank * squareSizePx) + (squareSizePx + squareSizePx / 2.f);
-    float centerX = (topLeft.x + file * squareSizePx) + (squareSizePx / 2.f);
+    float centerY = (topLeft.y + rank * squareSizePx) +
+                    (squareSizePx - (bounds.height / 2));
+    float centerX =
+        (topLeft.x + file * squareSizePx) + (squareSizePx - (bounds.width / 2));
 
     text.setPosition(centerX, centerY);
 
@@ -147,12 +150,6 @@ void BoardView::draw(sf::RenderTarget &target,
     for (int rank = 0; rank < 8; ++rank) {
         for (int file = 0; file < 8; ++file) {
 
-            // -- Draw chess notation
-            if (file == 0)
-                drawRankNotation(target, text, rank, file);
-
-            if (rank == 7)
-                drawFileNotation(target, text, rank, file);
             //
 
             // -- Draw squares
@@ -168,6 +165,13 @@ void BoardView::draw(sf::RenderTarget &target,
 
             // Draw square & Text
             target.draw(square);
+
+            // -- Draw chess notation
+            if (file == 0)
+                drawRankNotation(target, text, rank, file);
+
+            if (rank == 7)
+                drawFileNotation(target, text, rank, file);
         }
     }
 

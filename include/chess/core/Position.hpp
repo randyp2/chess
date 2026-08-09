@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cstdint> // For fix integer bits
-
 /**
  * std::array has no overhead
  *  - has .size() field -> returns constant O(1)
@@ -12,65 +10,35 @@
 #include <string>
 #include <vector>
 
+#include "../config/DebugConfig.hpp"
+#include "../core/BitBoard.hpp"
+#include "../core/Move.hpp"
+#include "../core/Piece.hpp"
+
 /**
  * Holds a snapshot of current Position
  * Used to keep track of positions and board logic
  */
 namespace chess::core {
 
-// Use scoped enums to represent color types and piece types
-//  - Better readablity: Must use scopes
-//  - Type safety
-
-enum class Color : std::uint8_t {
-    White = 0,
-    Black = 1,
-    Count // Keep track of count in enum
-};
-
-enum class PieceType : std::uint8_t {
-    King = 0,
-    Queen = 1,
-    Bishop = 2,
-    Knight = 3,
-    Rook = 4,
-    Pawn = 5,
-    Count // Keep track of count in enum
-};
-
-struct PieceOnSquare {
-    Color color;
-    PieceType piece;
-    int squareIdx; // 0 - 63
-};
-
 class Position {
   public:
-    /**
-     * Default constructor
-     * - Initialize to starting chess position
-     */
+    /// @brief Initialize to starting chess position
     Position();
 
-    /**
-     * Paramterized constructor
-     * - Initialize to fen position passed to constructor
-     */
+    /// @brief Initialize to fen position passed to constructor
     Position(const std::string &);
 
-    /* =============== BITBOARD GETTERS =============== */
+    Color getSideToMove() const { return this->side_to_move; }
 
-    // Return bitboard with specific color and piece
-    std::uint64_t getPieces(Color color, PieceType piece) const;
-    std::uint64_t getPieces(PieceType color) const;
+    Bitboard getPieces(Color color, PieceType piece) const;
+    Bitboard getPieces(PieceType color) const;
 
-    // Return occupied bitboard with specific color
-    std::uint64_t getOccupied(Color color) const;
+    Bitboard getOccupied(Color color) const;
+    Bitboard getOccupied() const;
 
-    // Return occupied bitboard squares
-    std::uint64_t getOccupied() const;
+    Bitboard getEnPassantSquareBB() const { return this->en_passant_square_bb; }
 
-    /* =============== UI GETTERS =============== */
     /**
      * Return info about all possible pieces - 32 pieces
      *
@@ -78,12 +46,10 @@ class Position {
      */
     std::vector<PieceOnSquare> getAllPieces() const;
 
-    // --- Debugging
-    void print_bitboard(std::uint64_t bb);
+    void print_bitboard(Bitboard bb) const;
 
-    /* =============== LOGICAL GAME MOVES =============== */
     // Move one piece square to square
-    void makeMove(int current_square, int final_square);
+    void makeMove(const Move &move, const chess::config::DebugConfig &debugger);
     bool findPieceAt(int squareIdx, Color &outColor, PieceType &outPiece) const;
 
   private:
@@ -91,14 +57,18 @@ class Position {
     // 2 x 6
     // White: King, Queen, Bishop, Knight, Rook, Pawn
     // Black: King, Queen, Bishop, Knight, Rook, Pawn
-    std::array<
-        std::array<std::uint64_t, static_cast<std::size_t>(PieceType::Count)>,
-        static_cast<std::size_t>(Color::Count)>
+    std::array<std::array<Bitboard, static_cast<std::size_t>(PieceType::Count)>,
+               static_cast<std::size_t>(Color::Count)>
         bit_boards{};
 
     Color side_to_move = Color::White;
 
-    // --- Helpers
+    // There can only be one en passant square in the entire game of chess
+    // If a pawn moves up twice then the current square it sits on is the ep
+    // square
+    //  This square is removed every other turn
+    Bitboard en_passant_square_bb = 0ULL;
+
     void clear();
     void parse_fen(const std::string &fen);
 };

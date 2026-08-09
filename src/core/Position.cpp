@@ -1,13 +1,50 @@
 #include "../../include/chess/core/Position.hpp"
-#include <cstdint>
-#include <cwctype>
+#include "../../include/chess/core/Move.hpp"
+#include "chess/core/Piece.hpp"
+
 #include <iomanip>
 #include <iostream>
 #include <sstream>
 
+// Debugging
+namespace {
+using chess::core::Bitboard;
+
+void printDebug(const Bitboard bb, int idx) {
+
+    constexpr const char *CYAN = "\033[36m";
+    constexpr const char *RED = "\033[31m";
+    constexpr const char *GREEN = "\033[32m";
+    constexpr const char *RESET = "\033[0m";
+
+    // Debug output - Print original bitboard of piece moving
+    // Print right half index
+    for (int i = 63; i >= 0; --i) {
+        std::cout << CYAN << std::setw(2) << (i / 10) << RESET;
+    }
+    std::cout << "\n";
+
+    // Print bits
+    for (int i = 63; i >= 0; --i) {
+        if (idx == i)
+            std::cout << RED << std::setw(2) << ((bb >> i) & 1) << RESET;
+        else if ((bb >> i & 1) == 1)
+            std::cout << GREEN << std::setw(2) << ((bb >> i) & 1) << RESET;
+        else
+            std::cout << std::setw(2) << ((bb >> i) & 1);
+    }
+    std::cout << "\n";
+
+    // Print left half index
+    for (int i = 63; i >= 0; --i) {
+        std::cout << CYAN << std::setw(2) << (i % 10) << RESET;
+    }
+    std::cout << "\n" << "\n";
+}
+} // namespace
+
 namespace chess::core {
 
-/* ======================= ANONYMOUS NAMESPACE ======================= */
 // Anonymous namespace: Used for private helper functions local to this file
 namespace {
 
@@ -21,9 +58,7 @@ constexpr std::size_t idx(PieceType p) { return static_cast<std::size_t>(p); }
 constexpr int square_index(int rank, int file) { return rank * 8 + (7 - file); }
 
 } // namespace
-/* ======================= ANONYMOUS NAMESPACE ======================= */
 
-/* ========= CONSTRUCTORS =========*/
 Position::Position() {
     parse_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w");
     // parse_fen("pppppppp/pppppppp/8/8/8/8/8/8 w");
@@ -31,26 +66,35 @@ Position::Position() {
 
 Position::Position(const std::string &fen_string) { parse_fen(fen_string); }
 
-/* ========= GETTERS =========*/
-std::uint64_t Position::getPieces(Color color, PieceType piece) const {
+Bitboard Position::getPieces(Color color, PieceType piece) const {
     return bit_boards[idx(color)][idx(piece)];
 }
 
-std::uint64_t Position::getPieces(PieceType piece) const {
+Bitboard Position::getPieces(PieceType piece) const {
     return bit_boards[idx(Color::White)][idx(piece)] |
            bit_boards[idx(Color::Black)][idx(piece)];
 }
 
-std::uint64_t Position::getOccupied(Color color) const { return 0ULL; }
+Bitboard Position::getOccupied(Color color) const {
+    Bitboard occupiedBB = 0ULL;
 
-std::uint64_t Position::getOccupied() const { return 0ULL; }
+    for (int piece = 0; piece < 6; ++piece) {
+        occupiedBB |= bit_boards[idx(color)][piece];
+    }
+
+    return occupiedBB;
+}
+
+Bitboard Position::getOccupied() const {
+    return getOccupied(Color::White) | getOccupied(Color::Black);
+}
 
 std::vector<PieceOnSquare> Position::getAllPieces() const {
     std::vector<PieceOnSquare> returner;
 
     for (int color = 0; color < 2; ++color) {
         for (int piece = 0; piece < 6; ++piece) {
-            std::uint64_t bit_board = bit_boards[color][piece];
+            Bitboard bit_board = bit_boards[color][piece];
 
             while (bit_board) {
                 // Count the number of trailing zeroes to the right of the first
@@ -162,9 +206,9 @@ void Position::parse_fen(const std::string &fen) {
             }
 
             int squareIdx = square_index(rank, file);
-            std::uint64_t temp = 1ULL; // 64 bit integer with LSB set to 1
-            temp = temp << squareIdx;  // Shift over the 1 bit to its designated
-                                       // bit representing the square index
+            Bitboard temp = 1ULL;     // 64 bit integer with LSB set to 1
+            temp = temp << squareIdx; // Shift over the 1 bit to its designated
+                                      // bit representing the square index
             bit_boards[idx(color)][idx(piece)] |=
                 temp; // Bitwise or to preserve past bits
             file++;
@@ -176,7 +220,7 @@ void Position::parse_fen(const std::string &fen) {
 
 bool Position::findPieceAt(int squareIdx, Color &outColor,
                            PieceType &outPiece) const {
-    std::uint64_t mask = 1ULL << squareIdx;
+    Bitboard mask = 1ULL << squareIdx;
 
     for (int color = 0; color < 2; ++color) {
         for (int piece = 0; piece < 6; ++piece) {
@@ -191,7 +235,10 @@ bool Position::findPieceAt(int squareIdx, Color &outColor,
     return false;
 }
 
-void Position::makeMove(int current_square, int final_square) {
+void Position::makeMove(const Move &move,
+                        const chess::config::DebugConfig &debugger) {
+    const int current_square = move.getFrom();
+    const int final_square = move.getTo();
 
     // Same square move
     if (current_square == final_square)
@@ -203,9 +250,14 @@ void Position::makeMove(int current_square, int final_square) {
     if (!findPieceAt(current_square, currColor, currPiece))
         return;
 
+    if (debugger.print_bitboards()) {
+        std::cout << "Old: " << std::endl;
+        printDebug(bit_boards[idx(currColor)][idx(currPiece)], current_square);
+    }
+
     // Represent from and to destinations with a bit board
-    std::uint64_t fromBB = 1ULL << current_square;
-    std::uint64_t toBB = 1ULL << final_square;
+    Bitboard fromBB = 1ULL << current_square;
+    Bitboard toBB = 1ULL << final_square;
 
     // Remove moving piece from own square
     //  - Take ones complement and & it to the bit_boards
@@ -214,19 +266,72 @@ void Position::makeMove(int current_square, int final_square) {
     //  bitboard & ~fromBB = 0010000
     bit_boards[idx(currColor)][idx(currPiece)] &= ~fromBB;
 
-    // Clear final square
-    for (int piece = 0; piece < 6; ++piece) {
-        bit_boards[idx(Color::White)][piece] &= ~toBB;
-        bit_boards[idx(Color::Black)][piece] &= ~toBB;
+    /* --- Types of moves --- */
+
+    // Castling
+    int rookFrom = -1;
+    int rookTo = -1;
+
+    if (move.isKingCastle()) {
+        rookFrom = (Color::White == currColor) ? 0 : 56;
+        rookTo = (Color::White == currColor) ? 2 : 58;
+
+    } else if (move.isQueenCastle()) {
+        rookFrom = (Color::White == currColor) ? 7 : 63;
+        rookTo = (Color::White == currColor) ? 4 : 60;
+    }
+
+    if (rookFrom != -1) {
+        const Bitboard rookFromMask = 1ULL << rookFrom;
+        const Bitboard rookToMask = 1ULL << rookTo;
+
+        // Remove rook
+        bit_boards[idx(currColor)][idx(PieceType::Rook)] &= ~rookFromMask;
+        // Place rook
+        bit_boards[idx(currColor)][idx(PieceType::Rook)] |= rookToMask;
+    }
+
+    // En Passant Capture
+    if (move.isEPCapture()) {
+        // The captured pawn is behind the final_square
+        // -8 : Go down a rank
+        // +8 : Go up a rank
+        const int epCaptureSquare =
+            (Color::White == currColor) ? final_square - 8 : final_square + 8;
+
+        const Bitboard mask = 1ULL << epCaptureSquare;
+
+        bit_boards[idx(Color::White)][idx(PieceType::Pawn)] &= ~mask;
+        bit_boards[idx(Color::Black)][idx(PieceType::Pawn)] &= ~mask;
+    } else if (move.isCapture()) {
+        // Clear final square
+        for (int piece = 0; piece < 6; ++piece) {
+            bit_boards[idx(Color::White)][piece] &= ~toBB;
+            bit_boards[idx(Color::Black)][piece] &= ~toBB;
+        }
     }
 
     // Placing moving piece to final square
     bit_boards[idx(currColor)][idx(currPiece)] |= toBB;
 
+    // Populate en passant square
+    if (move.isDoublePP()) {
+        int en_passant_square =
+            (Color::White == currColor) ? final_square - 8 : final_square + 8;
+        this->en_passant_square_bb = 1ULL << en_passant_square;
+    } else {
+        this->en_passant_square_bb = 0ULL;
+    }
+
+    if (debugger.print_bitboards()) {
+        std::cout << "New: " << std::endl;
+        printDebug(bit_boards[idx(currColor)][idx(currPiece)], final_square);
+    }
+
     side_to_move = (side_to_move == Color::White) ? Color::Black : Color::White;
 }
 
-void Position::print_bitboard(std::uint64_t bb) {
+void Position::print_bitboard(Bitboard bb) const {
 
     for (int rank = 7; rank >= 0; --rank) {
         std::cout << std::setw(2) << std::to_string(rank + 1) << "  ";
@@ -234,8 +339,8 @@ void Position::print_bitboard(std::uint64_t bb) {
         for (int file = 0; file < 8; ++file) {
             int squareIdx = square_index(rank, file);
 
-            std::uint64_t temp = 1ULL << squareIdx; // Shift 1 bit to the bit
-                                                    // reffering to square index
+            Bitboard temp = 1ULL << squareIdx; // Shift 1 bit to the bit
+                                               // reffering to square index
 
             // Perform bit-wise and and if non-zero then it is occupied
             bool occupied = (bb & temp) != 0;

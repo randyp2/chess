@@ -4,6 +4,7 @@
 #include <SFML/System/Vector2.hpp>
 #include <SFML/Window/Event.hpp>
 
+#include "../config/DebugConfig.hpp"
 #include "../core/Position.hpp"
 #include "../ui/board_view.hpp"
 
@@ -28,7 +29,8 @@ class InputController {
      */
     void handleEvent(const sf::Event &event, const sf::RenderWindow &window,
                      const chess::ui::BoardView &board,
-                     chess::core::Position &Position);
+                     chess::core::Position &Position,
+                     const chess::config::DebugConfig &debugger);
 
     const DragState *dragState() const { return &drag; }
 
