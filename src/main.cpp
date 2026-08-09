@@ -8,7 +8,7 @@
 #include "../include/chess/ui/board_view.hpp"
 #include "../include/chess/ui/input_controller.hpp"
 #include "chess/core/Attacks.hpp"
-#include "chess/core/MoveGenerator.hpp"
+
 #include <iostream>
 
 using chess::config::DebugConfig;

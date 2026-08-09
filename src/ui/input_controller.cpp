@@ -76,7 +76,7 @@ void InputController::handleEvent(const sf::Event &event,
             if (found)
                 position.makeMove(chosenMove, debugger);
             else
-                std::cout << "Illegal pawn move!\n";
+                std::cout << "Illegal move!\n";
 
             // chess::core::Move move(
             //     static_cast<std::uint8_t>(drag.piece.squareIdx),

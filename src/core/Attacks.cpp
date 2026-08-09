@@ -1,8 +1,8 @@
 #include "chess/core/Attacks.hpp"
+#include "chess/core/magic/Magic.hpp"
 
 #include <array>
 #include <cassert>
-#include <stdexcept>
 
 namespace chess::core::attacks {
 namespace {
@@ -57,7 +57,10 @@ const LeaperAttackTables &leaperAttackTables() noexcept {
 
 } // namespace
 
-void initialize() noexcept { (void)leaperAttackTables(); }
+void initialize() {
+    (void)leaperAttackTables();
+    initializeMagicBitboards();
+}
 
 Bitboard knight(int square) noexcept {
     assert(square >= 0 && square < 64);
@@ -69,16 +72,17 @@ Bitboard king(int square) noexcept {
     return leaperAttackTables().kings[square];
 }
 
-Bitboard bishop(int, Bitboard) {
-    throw std::runtime_error("Bishop attacks not implemented");
+Bitboard bishop(int square, Bitboard occupied) {
+    return bishopMagicAttacks(square, occupied);
 }
 
-Bitboard rook(int, Bitboard) {
-    throw std::runtime_error("Rook attacks not implemented");
+Bitboard rook(int square, Bitboard occupied) {
+    return rookMagicAttacks(square, occupied);
 }
 
-Bitboard queen(int, Bitboard) {
-    throw std::runtime_error("Queen attacks not implemented");
+Bitboard queen(int square, Bitboard occupied) {
+    return bishopMagicAttacks(square, occupied) |
+           rookMagicAttacks(square, occupied);
 }
 
 } // namespace chess::core::attacks

@@ -24,6 +24,7 @@ void addMovesFromSquare(int from, Bitboard targets, MoveFlag flag,
     }
 }
 
+/// @brief Add noncapture pawns moves to a move list
 void addPawnMovesFromTargets(Bitboard targets, int offset, MoveFlag flag,
                              MoveList &moves) {
     while (targets) {
@@ -35,6 +36,7 @@ void addPawnMovesFromTargets(Bitboard targets, int offset, MoveFlag flag,
     }
 }
 
+/// @brief Add capturing pawn moves to a move list
 void addPawnCapturesFromTargets(Bitboard targets, int offset,
                                 Bitboard enPassantTarget, MoveList &moves) {
     while (targets) {
@@ -58,8 +60,10 @@ void MoveGenerator::generatePseudoLegal(
     const chess::config::DebugConfig &debug) {
     generateKnightMoves(pos, moves);
     generatePawnMoves(pos, moves, debug);
-    // TODO: Enable sliding-piece generation after its attacks are implemented.
     generateKingMoves(pos, moves);
+    generateRookMoves(pos, moves);
+    generateBishopMoves(pos, moves);
+    generateQueenMoves(pos, moves);
 }
 
 // Generate all legal moves given a position
@@ -188,6 +192,81 @@ void MoveGenerator::generateKingMoves(const Position &pos, MoveList &moves) {
         const int from_square = bb::pop_lsb(kings);
 
         const Bitboard attacks = attacks::king(from_square) & ~friendly_pieces;
+
+        const Bitboard quiet_moves = attacks & ~occupied;
+        const Bitboard captures = attacks & enemy_pieces;
+
+        addMovesFromSquare(from_square, quiet_moves, MoveFlag::QUIET_MOVES,
+                           moves);
+        addMovesFromSquare(from_square, captures, MoveFlag::CAPTURES, moves);
+    }
+}
+
+void MoveGenerator::generateBishopMoves(const Position &pos, MoveList &moves) {
+    const Color side = pos.getSideToMove();
+    const Color enemy = side == Color::White ? Color::Black : Color::White;
+
+    Bitboard bishops = pos.getPieces(side, PieceType::Bishop);
+
+    const Bitboard occupied = pos.getOccupied();
+    const Bitboard friendly_pieces = pos.getOccupied(side);
+    const Bitboard enemy_pieces = pos.getOccupied(enemy);
+
+    while (bishops) {
+        const int from_square = bb::pop_lsb(bishops);
+
+        const Bitboard attacks =
+            attacks::bishop(from_square, occupied) & ~friendly_pieces;
+
+        const Bitboard quiet_moves = attacks & ~occupied;
+        const Bitboard captures = attacks & enemy_pieces;
+
+        addMovesFromSquare(from_square, quiet_moves, MoveFlag::QUIET_MOVES,
+                           moves);
+        addMovesFromSquare(from_square, captures, MoveFlag::CAPTURES, moves);
+    }
+}
+
+void MoveGenerator::generateRookMoves(const Position &pos, MoveList &moves) {
+    const Color side = pos.getSideToMove();
+    const Color enemy = side == Color::White ? Color::Black : Color::White;
+
+    Bitboard rooks = pos.getPieces(side, PieceType::Rook);
+
+    const Bitboard occupied = pos.getOccupied();
+    const Bitboard friendly_pieces = pos.getOccupied(side);
+    const Bitboard enemy_pieces = pos.getOccupied(enemy);
+
+    while (rooks) {
+        const int from_square = bb::pop_lsb(rooks);
+
+        const Bitboard attacks =
+            attacks::rook(from_square, occupied) & ~friendly_pieces;
+
+        const Bitboard quiet_moves = attacks & ~occupied;
+        const Bitboard captures = attacks & enemy_pieces;
+
+        addMovesFromSquare(from_square, quiet_moves, MoveFlag::QUIET_MOVES,
+                           moves);
+        addMovesFromSquare(from_square, captures, MoveFlag::CAPTURES, moves);
+    }
+}
+
+void MoveGenerator::generateQueenMoves(const Position &pos, MoveList &moves) {
+    const Color side = pos.getSideToMove();
+    const Color enemy = side == Color::White ? Color::Black : Color::White;
+
+    Bitboard queens = pos.getPieces(side, PieceType::Queen);
+
+    const Bitboard occupied = pos.getOccupied();
+    const Bitboard friendly_pieces = pos.getOccupied(side);
+    const Bitboard enemy_pieces = pos.getOccupied(enemy);
+
+    while (queens) {
+        const int from_square = bb::pop_lsb(queens);
+
+        const Bitboard attacks =
+            attacks::queen(from_square, occupied) & ~friendly_pieces;
 
         const Bitboard quiet_moves = attacks & ~occupied;
         const Bitboard captures = attacks & enemy_pieces;

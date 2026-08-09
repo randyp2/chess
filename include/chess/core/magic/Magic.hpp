@@ -12,6 +12,7 @@
     perform fast lookups regardings moves.
 
 */
+#include "chess/core/BitBoard.hpp"
 namespace chess::core {
 
 /*
@@ -23,4 +24,26 @@ namespace chess::core {
  * fast lookups.
  */
 void initializeMagicBitboards();
+
+/**
+ * @brief Given the occupied squares on a bitboard find the given attacks a
+ * rook can do
+ *
+ * @params square Represents the curent square the rook is on
+ * @params occupied Bitboard containing the occupied squares on the board
+ *
+ * @returns Bitboard containing the possible attack squares
+ */
+Bitboard rookMagicAttacks(int square, Bitboard occupied);
+
+/**
+ * @brief Given the occupied squares on a bitboard find the given attacks a
+ * bishop can do
+ *
+ * @params square Represents the curent square the bishop is on
+ * @params occupied Bitboard containing the occupied squares on the board
+ *
+ * @returns Bitboard containing the possible attack squares
+ */
+Bitboard bishopMagicAttacks(int square, Bitboard occupied);
 } // namespace chess::core

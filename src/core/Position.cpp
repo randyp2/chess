@@ -206,9 +206,9 @@ void Position::parse_fen(const std::string &fen) {
             }
 
             int squareIdx = square_index(rank, file);
-            Bitboard temp = 1ULL; // 64 bit integer with LSB set to 1
-            temp = temp << squareIdx;  // Shift over the 1 bit to its designated
-                                       // bit representing the square index
+            Bitboard temp = 1ULL;     // 64 bit integer with LSB set to 1
+            temp = temp << squareIdx; // Shift over the 1 bit to its designated
+                                      // bit representing the square index
             bit_boards[idx(color)][idx(piece)] |=
                 temp; // Bitwise or to preserve past bits
             file++;
@@ -242,8 +242,8 @@ void Position::makeMove(const Move &move,
 
     // Same square move
     if (current_square == final_square)
-
         return;
+
     Color currColor;
     PieceType currPiece;
 

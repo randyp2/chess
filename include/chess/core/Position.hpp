@@ -23,16 +23,10 @@ namespace chess::core {
 
 class Position {
   public:
-    /**
-     * Default constructor
-     * - Initialize to starting chess position
-     */
+    /// @brief Initialize to starting chess position
     Position();
 
-    /**
-     * Paramterized constructor
-     * - Initialize to fen position passed to constructor
-     */
+    /// @brief Initialize to fen position passed to constructor
     Position(const std::string &);
 
     Color getSideToMove() const { return this->side_to_move; }
@@ -43,9 +37,7 @@ class Position {
     Bitboard getOccupied(Color color) const;
     Bitboard getOccupied() const;
 
-    Bitboard getEnPassantSquareBB() const {
-        return this->en_passant_square_bb;
-    }
+    Bitboard getEnPassantSquareBB() const { return this->en_passant_square_bb; }
 
     /**
      * Return info about all possible pieces - 32 pieces
@@ -65,9 +57,8 @@ class Position {
     // 2 x 6
     // White: King, Queen, Bishop, Knight, Rook, Pawn
     // Black: King, Queen, Bishop, Knight, Rook, Pawn
-    std::array<
-        std::array<Bitboard, static_cast<std::size_t>(PieceType::Count)>,
-        static_cast<std::size_t>(Color::Count)>
+    std::array<std::array<Bitboard, static_cast<std::size_t>(PieceType::Count)>,
+               static_cast<std::size_t>(Color::Count)>
         bit_boards{};
 
     Color side_to_move = Color::White;

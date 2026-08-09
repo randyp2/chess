@@ -1,6 +1,8 @@
 #include "chess/core/magic/Magic.hpp"
 #include "chess/core/BitBoard.hpp"
 #include "chess/core/magic/MagicHelpers.hpp"
+#include "chess/core/magic/PrecomputedMagics.hpp"
+
 #include <array>
 #include <bit>
 #include <vector>
@@ -54,8 +56,9 @@ Tables &tables() {
     static Tables result = [] {
         Tables value;
         for (int square = 0; square < 64; ++square) {
-            buildEntry(value.rooks[square], square, true, 0ULL);
-            buildEntry(value.bishops[square], square, false, 0ULL);
+            buildEntry(value.rooks[square], square, true, ROOK_MAGICS[square]);
+            buildEntry(value.bishops[square], square, false,
+                       BISHOP_MAGICS[square]);
         }
 
         return value;
