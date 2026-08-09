@@ -77,12 +77,6 @@ void InputController::handleEvent(const sf::Event &event,
                 position.makeMove(chosenMove, debugger);
             else
                 std::cout << "Illegal move!\n";
-
-            // chess::core::Move move(
-            //     static_cast<std::uint8_t>(drag.piece.squareIdx),
-            //     static_cast<std::uint8_t>(targetSquare),
-            //     chess::core::MoveFlag::KING_CASTLE);
-            // position.makeMove(move, debugger);
         }
 
         drag.active = false;

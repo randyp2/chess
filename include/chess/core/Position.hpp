@@ -56,6 +56,27 @@ class Position {
     bool findPieceAt(int squareIdx, Color &outColor, PieceType &outPiece) const;
 
   private:
+    /*
+        White: King, Queen, Bishop, Knight, Rook, Pawn
+        Black: King, Queen, Bishop, Knight, Rook, Pawn
+    */
+    std::array<std::array<Bitboard, static_cast<std::size_t>(PieceType::Count)>,
+               static_cast<std::size_t>(Color::Count)>
+        bit_boards{};
+
+    Color side_to_move = Color::White;
+
+    /*
+        There can only be one en passant square in the entire game of chess
+        If a pawn moves up twice then the current square it sits on is the ep
+        square
+        This square is removed every other turn
+    */
+    Bitboard en_passant_square_bb = 0ULL;
+
+    void clear();
+    void parse_fen(const std::string &fen);
+
     /// @brief Castling rights for both sides
     struct CastlingRights {
         bool whiteKingSide = false;
@@ -65,24 +86,8 @@ class Position {
     };
     CastlingRights castlingRights{};
 
-    // Bitboard for every piece -> 12 total
-    // 2 x 6
-    // White: King, Queen, Bishop, Knight, Rook, Pawn
-    // Black: King, Queen, Bishop, Knight, Rook, Pawn
-    std::array<std::array<Bitboard, static_cast<std::size_t>(PieceType::Count)>,
-               static_cast<std::size_t>(Color::Count)>
-        bit_boards{};
-
-    Color side_to_move = Color::White;
-
-    // There can only be one en passant square in the entire game of chess
-    // If a pawn moves up twice then the current square it sits on is the ep
-    // square
-    //  This square is removed every other turn
-    Bitboard en_passant_square_bb = 0ULL;
-
-    void clear();
-    void parse_fen(const std::string &fen);
+    void updateCastlingRights(Color movingColor, PieceType movingPiece,
+                              int fromSquare, int toSquare);
 };
 
 } // namespace chess::core

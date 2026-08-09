@@ -287,27 +287,21 @@ void Position::makeMove(const Move &move,
         printDebug(bit_boards[idx(currColor)][idx(currPiece)], current_square);
     }
 
-    // Represent from and to destinations with a bit board
     Bitboard fromBB = 1ULL << current_square;
     Bitboard toBB = 1ULL << final_square;
 
-    // Remove moving piece from own square
-    //  - Take ones complement and & it to the bit_boards
-    //  - This will remove the piece from its current position
-    //  i.e. bitboard = 00101000 , fromBB = 00101000, ~fromBB = 11010111
-    //  bitboard & ~fromBB = 0010000
+    // Remove piece from own square
     bit_boards[idx(currColor)][idx(currPiece)] &= ~fromBB;
 
-    /* --- Types of moves --- */
+    // --- Castling
+    updateCastlingRights(currColor, currPiece, current_square, final_square);
 
-    // Castling
     int rookFrom = -1;
     int rookTo = -1;
 
     if (move.isKingCastle()) {
         rookFrom = (Color::White == currColor) ? 0 : 56;
         rookTo = (Color::White == currColor) ? 2 : 58;
-
     } else if (move.isQueenCastle()) {
         rookFrom = (Color::White == currColor) ? 7 : 63;
         rookTo = (Color::White == currColor) ? 4 : 60;
@@ -323,11 +317,9 @@ void Position::makeMove(const Move &move,
         bit_boards[idx(currColor)][idx(PieceType::Rook)] |= rookToMask;
     }
 
-    // En Passant Capture
+    // --- En Passant Capture
     if (move.isEPCapture()) {
         // The captured pawn is behind the final_square
-        // -8 : Go down a rank
-        // +8 : Go up a rank
         const int epCaptureSquare =
             (Color::White == currColor) ? final_square - 8 : final_square + 8;
 
@@ -343,10 +335,7 @@ void Position::makeMove(const Move &move,
         }
     }
 
-    // Placing moving piece to final square
-    bit_boards[idx(currColor)][idx(currPiece)] |= toBB;
-
-    // Populate en passant square
+    // --- Populate en passant square
     if (move.isDoublePP()) {
         int en_passant_square =
             (Color::White == currColor) ? final_square - 8 : final_square + 8;
@@ -355,12 +344,66 @@ void Position::makeMove(const Move &move,
         this->en_passant_square_bb = 0ULL;
     }
 
+    // --- Moving piece to square
+    bit_boards[idx(currColor)][idx(currPiece)] |= toBB;
+
     if (debugger.print_bitboards()) {
         std::cout << "New: " << std::endl;
         printDebug(bit_boards[idx(currColor)][idx(currPiece)], final_square);
     }
 
     side_to_move = (side_to_move == Color::White) ? Color::Black : Color::White;
+}
+
+void Position::updateCastlingRights(Color movingColor, PieceType movingPiece,
+                                    int fromSquare, int toSquare) {
+    constexpr int A1 = 7;
+    constexpr int H1 = 0;
+    constexpr int A8 = 63;
+    constexpr int H8 = 56;
+
+    Color capturedColor;
+    PieceType capturedPiece;
+    bool capturedPieceExists =
+        findPieceAt(toSquare, capturedColor, capturedPiece);
+
+    // Moving king removes castling rights
+    if (movingPiece == PieceType::King) {
+        if (movingColor == Color::White) {
+            castlingRights.whiteKingSide = false;
+            castlingRights.whiteQueenSide = false;
+        } else {
+            castlingRights.blackKingSide = false;
+            castlingRights.blackQueenSide = false;
+        }
+    }
+
+    // Moving rook removes castling rights
+    if (movingPiece == PieceType::Rook) {
+        if (fromSquare == H1)
+            castlingRights.whiteKingSide = false;
+        else if (fromSquare == A1)
+            castlingRights.whiteQueenSide = false;
+        else if (fromSquare == H8)
+            castlingRights.blackKingSide = false;
+        else if (fromSquare == A8)
+            castlingRights.blackQueenSide = false;
+    }
+
+    // Caputuring a rook removes castling rights
+    if (capturedPieceExists && capturedPiece == PieceType::Rook) {
+        if (capturedColor == Color::White) {
+            if (toSquare == H1)
+                castlingRights.whiteKingSide = false;
+            else if (toSquare == A1)
+                castlingRights.whiteQueenSide = false;
+        } else {
+            if (toSquare == H8)
+                castlingRights.blackKingSide = false;
+            else if (toSquare == A8)
+                castlingRights.blackQueenSide = false;
+        }
+    }
 }
 
 void Position::print_bitboard(Bitboard bb) const {
