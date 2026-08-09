@@ -39,6 +39,9 @@ class Position {
 
     Bitboard getEnPassantSquareBB() const { return this->en_passant_square_bb; }
 
+    bool canCastleKingSide(Color color) const;
+    bool canCastleQueenSide(Color color) const;
+
     /**
      * Return info about all possible pieces - 32 pieces
      *
@@ -53,6 +56,15 @@ class Position {
     bool findPieceAt(int squareIdx, Color &outColor, PieceType &outPiece) const;
 
   private:
+    /// @brief Castling rights for both sides
+    struct CastlingRights {
+        bool whiteKingSide = false;
+        bool whiteQueenSide = false;
+        bool blackKingSide = false;
+        bool blackQueenSide = false;
+    };
+    CastlingRights castlingRights{};
+
     // Bitboard for every piece -> 12 total
     // 2 x 6
     // White: King, Queen, Bishop, Knight, Rook, Pawn

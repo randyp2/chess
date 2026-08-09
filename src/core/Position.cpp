@@ -60,8 +60,7 @@ constexpr int square_index(int rank, int file) { return rank * 8 + (7 - file); }
 } // namespace
 
 Position::Position() {
-    parse_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w");
-    // parse_fen("pppppppp/pppppppp/8/8/8/8/8/8 w");
+    parse_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq");
 }
 
 Position::Position(const std::string &fen_string) { parse_fen(fen_string); }
@@ -123,6 +122,16 @@ std::vector<PieceOnSquare> Position::getAllPieces() const {
     return returner;
 }
 
+bool Position::canCastleKingSide(Color color) const {
+    return color == Color::White ? castlingRights.whiteKingSide
+                                 : castlingRights.blackKingSide;
+}
+
+bool Position::canCastleQueenSide(Color color) const {
+    return color == Color::White ? castlingRights.whiteQueenSide
+                                 : castlingRights.blackQueenSide;
+}
+
 /* ========= HELPERS FOR FEN ========= */
 void Position::clear() {
     for (auto &color_bit_board : bit_boards) {
@@ -130,6 +139,8 @@ void Position::clear() {
             bit_board = 0ULL;
         }
     }
+
+    castlingRights = {};
 }
 
 /**
@@ -145,11 +156,32 @@ void Position::parse_fen(const std::string &fen) {
     std::istringstream iss(fen);
     std::string positions;
     std::string current_move;
+    std::string castling_rights;
 
-    iss >> positions >> current_move;
+    iss >> positions >> current_move >> castling_rights;
 
     // --- Initialize side to move
     side_to_move = current_move == "w" ? Color::White : Color::Black;
+
+    // --- Parse castling rights
+    for (const char c : castling_rights) {
+        switch (c) {
+        case 'K':
+            castlingRights.whiteKingSide = true;
+            break;
+        case 'Q':
+            castlingRights.whiteQueenSide = true;
+            break;
+        case 'k':
+            castlingRights.blackKingSide = true;
+            break;
+        case 'q':
+            castlingRights.blackQueenSide = true;
+            break;
+        default:
+            break;
+        }
+    }
 
     // --- Parse fen string
     std::istringstream iss2(positions);
