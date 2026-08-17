@@ -53,6 +53,93 @@ void addPawnCapturesFromTargets(Bitboard targets, int offset,
     }
 }
 
+/// @brief Return whether a king can castle king side
+bool canCastleKingSide(const Position &pos, const Color color) {
+    const Color attacking_color =
+        color == Color::White ? Color::Black : Color::White;
+    const int offset = color == Color::White ? 0 : 56; // Row 1 or Row 8
+
+    const int rook_square = offset;
+    const int king_target = offset + 1;
+    const int king_obstacle = offset + 2;
+    const int king_square = offset + 3;
+
+    const Bitboard occupied = pos.getOccupied();
+    const Bitboard rooks = pos.getPieces(color, PieceType::Rook);
+    const Bitboard kings = pos.getPieces(color, PieceType::King);
+
+    const Bitboard empty_squares =
+        (1ULL << king_obstacle) | (1ULL << king_target);
+
+    // Check castling rights
+    if (!(pos.canCastleKingSide(color)))
+        return false;
+
+    // No rook available
+    if (!((1ULL << rook_square) & rooks))
+        return false;
+
+    // No king available
+    if (!((1ULL << king_square) & kings))
+        return false;
+
+    // If obstacle in the way
+    if (empty_squares & occupied)
+        return false;
+
+    // If king is attacked
+    if (attacks::isSquareAttacked(pos, king_target, attacking_color) ||
+        attacks::isSquareAttacked(pos, king_obstacle, attacking_color) ||
+        attacks::isSquareAttacked(pos, king_square, attacking_color))
+        return false;
+
+    return true;
+}
+
+bool canCastleQueenSide(const Position &pos, const Color color) {
+    const Color attacking_color =
+        color == Color::White ? Color::Black : Color::White;
+    const int offset = color == Color::White ? 0 : 56; // Row 1 or Row 8
+
+    const int king_target = offset + 5;
+    const int king_square = offset + 3;
+    const int king_obstacle = offset + 4;
+    const int king_obstacle_2 = offset + 6;
+    const int rook_square = offset + 7;
+
+    const Bitboard occupied = pos.getOccupied();
+    const Bitboard rooks = pos.getPieces(color, PieceType::Rook);
+    const Bitboard kings = pos.getPieces(color, PieceType::King);
+
+    const Bitboard empty_squares = (1ULL << king_obstacle) |
+                                   (1ULL << king_target) |
+                                   (1ULL << king_obstacle_2);
+
+    // Check castling rights
+    if (!(pos.canCastleQueenSide(color)))
+        return false;
+
+    // No rook available
+    if (!((1ULL << rook_square) & rooks))
+        return false;
+
+    // No king available
+    if (!((1ULL << king_square) & kings))
+        return false;
+
+    // If obstacle in the way
+    if (empty_squares & occupied)
+        return false;
+
+    // If king is attacked
+    if (attacks::isSquareAttacked(pos, king_target, attacking_color) ||
+        attacks::isSquareAttacked(pos, king_obstacle, attacking_color) ||
+        attacks::isSquareAttacked(pos, king_square, attacking_color))
+        return false;
+
+    return true;
+}
+
 } // namespace
 
 void MoveGenerator::generatePseudoLegal(
@@ -200,6 +287,8 @@ void MoveGenerator::generateKingMoves(const Position &pos, MoveList &moves) {
                            moves);
         addMovesFromSquare(from_square, captures, MoveFlag::CAPTURES, moves);
     }
+
+    generateCastleMoves(pos, side, moves);
 }
 
 void MoveGenerator::generateBishopMoves(const Position &pos, MoveList &moves) {
@@ -275,6 +364,26 @@ void MoveGenerator::generateQueenMoves(const Position &pos, MoveList &moves) {
                            moves);
         addMovesFromSquare(from_square, captures, MoveFlag::CAPTURES, moves);
     }
+}
+
+void MoveGenerator::generateCastleMoves(const Position &pos, const Color side,
+                                        MoveList &moves) {
+    const int offset = side == Color::White ? 0 : 56;
+    const int king_start = offset + 3;
+    const int king_side_target = offset + 1;
+    const int queen_side_target = offset + 5;
+
+    pos.printCastlingRights();
+
+    if (canCastleKingSide(pos, side))
+        moves.add(Move{static_cast<uint8_t>(king_start),
+                       static_cast<uint8_t>(king_side_target),
+                       MoveFlag::KING_CASTLE});
+
+    if (canCastleQueenSide(pos, side))
+        moves.add(Move{static_cast<uint8_t>(king_start),
+                       static_cast<uint8_t>(queen_side_target),
+                       MoveFlag::QUEEN_CASTLE});
 }
 
 } // namespace chess::core

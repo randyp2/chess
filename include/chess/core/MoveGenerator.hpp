@@ -42,12 +42,14 @@ class MoveGenerator {
                                   const chess::config::DebugConfig &debug);
 
   private:
-    // --- Helpers for move generation
     static void generateKnightMoves(const Position &pos, MoveList &moves);
     static void generateBishopMoves(const Position &pos, MoveList &moves);
     static void generateRookMoves(const Position &pos, MoveList &moves);
     static void generateQueenMoves(const Position &pos, MoveList &moves);
     static void generateKingMoves(const Position &pos, MoveList &moves);
+
+    static void generateCastleMoves(const Position &pos, const Color side,
+                                    MoveList &moves);
 
     static bool isInCheck(const Position &pos);
 };

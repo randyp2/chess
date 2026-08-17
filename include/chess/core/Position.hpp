@@ -55,6 +55,8 @@ class Position {
     void makeMove(const Move &move, const chess::config::DebugConfig &debugger);
     bool findPieceAt(int squareIdx, Color &outColor, PieceType &outPiece) const;
 
+    void printCastlingRights() const { castlingRights.print(); }
+
   private:
     /*
         White: King, Queen, Bishop, Knight, Rook, Pawn
@@ -83,6 +85,14 @@ class Position {
         bool whiteQueenSide = false;
         bool blackKingSide = false;
         bool blackQueenSide = false;
+
+        void print() const {
+
+            std::cout << "White kingside: " << whiteKingSide << "\n"
+                      << "White queenside: " << whiteQueenSide << "\n"
+                      << "Black kingside: " << blackKingSide << "\n"
+                      << "Black queenside: " << blackQueenSide << "\n";
+        }
     };
     CastlingRights castlingRights{};
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "chess/core/BitBoard.hpp"
+#include "chess/core/Position.hpp"
 
 namespace chess::core::attacks {
 
@@ -26,5 +27,8 @@ Bitboard rook(int square, Bitboard occupied);
 /// @brief Retrieve attack squares before and including first blocker for a
 /// queen
 Bitboard queen(int square, Bitboard occupied);
+
+bool isSquareAttacked(const Position &position, int attacked_square,
+                      Color attacking_color);
 
 } // namespace chess::core::attacks
