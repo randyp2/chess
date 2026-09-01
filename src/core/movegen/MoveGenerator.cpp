@@ -1,4 +1,4 @@
-#include "../../include/chess/core/MoveGenerator.hpp"
+#include "chess/core/movegen/MoveGenerator.hpp"
 #include "chess/config/DebugConfig.hpp"
 #include "chess/core/Attacks.hpp"
 #include "chess/core/BitBoard.hpp"

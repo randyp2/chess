@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../core/Move.hpp"
-#include "../core/Position.hpp"
 #include "chess/config/DebugConfig.hpp"
+#include "chess/core/Move.hpp"
+#include "chess/core/Position.hpp"
 #include <cstddef>
 
 namespace chess::core {
